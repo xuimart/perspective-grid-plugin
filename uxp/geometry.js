@@ -17,7 +17,7 @@
   const defaults = {
     yaw: 43, pitch: 5, roll: 0, fov: 35.638, focalLength: 35, distortion: 100, viewZoom: 100, distance: 16, panX: 0, panY: 0,
     projection: 'perspective', preset: 'free', density: 20, opacity: 80,
-    lineWidth: 1.5, color: '#414447', horizonColor: '#b77728', aspect: 1.6, gridStyle:'rays',
+    lineWidth: 1.5, color: '#414447', horizonColor: '#b77728', aspect: 1.6, gridStyle:'floor',
     xCount: 16, yCount: 12, zCount: 16, boxSize: 1.5, referenceModel: 'box',
     modelPositions: {box:[0,0,0],table:[0,0,0],room:[0,0,0]},
     xLines: true, yLines: true, zLines: true,
@@ -39,7 +39,7 @@
     }
     if (/^#[0-9a-f]{6}$/i.test(input.color || '')) state.color = input.color;
     if (/^#[0-9a-f]{6}$/i.test(input.horizonColor || '')) state.horizonColor = input.horizonColor;
-    if (['space','rays'].includes(input.gridStyle)) state.gridStyle=input.gridStyle;
+    if (['space','rays','floor'].includes(input.gridStyle)) state.gridStyle=input.gridStyle;
     if ([1.6, 1, .75].includes(input.aspect)) state.aspect = input.aspect;
     if (!Number.isFinite(input.focalLength) && Number.isFinite(input.fov)) {
       state.focalLength = clamp(18 * Math.min(1, 1/state.aspect) / Math.tan(clamp(input.fov,20,100)*radians/2), 10, 300);
@@ -93,8 +93,12 @@
       eye: forward.map(v => -v * distance),
       cx: width * (.5 + (gizmo ? 0 : state.panX / 100)),
       cy: height * ((gizmo ? .46 : .5) + (gizmo ? 0 : state.panY / 100)),
-      focal: width * state.focalLength / 36 * (gizmo ? 1 : state.viewZoom / 100),
-      scale: gizmo ? Math.min(width, height) * .265 : Math.min(width, height) / state.distance * state.viewZoom / 100,
+      // Lens (focal) is independent of scene zoom: focal comes only from the mm
+      // lens. Zoom is a pure post-projection magnification (see fromCamera),
+      // so it never changes perspective/convergence — only enlarges the image.
+      focal: width * state.focalLength / 36,
+      scale: gizmo ? Math.min(width, height) * .265 : Math.min(width, height) / state.distance,
+      zoom: gizmo ? 1 : state.viewZoom / 100,
       ortho: gizmo || state.projection === 'ortho', fisheye: !gizmo && state.projection==='fisheye',
       distortion: state.distortion/100, near: .12
     };
@@ -104,16 +108,25 @@
     return [dot(relative, cam.right), dot(relative, cam.up), dot(relative, cam.forward)];
   }
   function fromCamera(p, cam) {
+    // Zoom is applied as a uniform magnification about the frame center AFTER
+    // projection (zoomPoint), so perspective/convergence never changes with zoom.
     if(cam.fisheye){
       const length=Math.hypot(p[0],p[1]);
-      if(length<1e-12)return [cam.cx,cam.cy];
+      if(length<1e-12)return zoomPoint([cam.cx,cam.cy],cam);
       const theta=Math.atan2(length,p[2]);
       const u=Math.sin(theta);
       const radius=cam.focal*(u+.5*(1-cam.distortion)*u*u*u*(1-u*u));
-      return [cam.cx+radius*p[0]/length,cam.cy-radius*p[1]/length];
+      return zoomPoint([cam.cx+radius*p[0]/length,cam.cy-radius*p[1]/length],cam);
     }
     const scale = cam.ortho ? cam.scale : cam.focal / p[2];
-    return [cam.cx + p[0] * scale, cam.cy - p[1] * scale];
+    return zoomPoint([cam.cx + p[0] * scale, cam.cy - p[1] * scale],cam);
+  }
+  // Uniform magnification about the frame center. Enlarges the whole image
+  // without changing perspective. Applied everywhere lines are produced.
+  function zoomPoint(pt, cam) {
+    const z = cam.zoom == null ? 1 : cam.zoom;
+    if (z === 1 || !pt) return pt;
+    return [ cam.width/2 + (pt[0]-cam.width/2)*z, cam.height/2 + (pt[1]-cam.height/2)*z ];
   }
   function project(p, cam) {
     const v = cameraPoint(p, cam);
@@ -126,8 +139,12 @@
     const position=state.modelPositions[state.referenceModel],cam=camera(state,width,height);
     const p=cameraPoint(position,cam);
     if(!cam.ortho&&p[2]<cam.near)return state;
-    const screen=fromCamera(p,cam);
-    let x=screen[0]+dx-cam.cx,y=cam.cy-screen[1]-dy;
+    // Work in pre-zoom projection space: fromCamera now applies zoom about the
+    // frame center, so undo it for the screen point and the drag delta.
+    const z=cam.zoom==null?1:cam.zoom;
+    const sp=fromCamera(p,cam);
+    const screen=[(sp[0]-cam.width/2)/z+cam.width/2,(sp[1]-cam.height/2)/z+cam.height/2];
+    let x=screen[0]+dx/z-cam.cx,y=cam.cy-screen[1]-dy/z;
     if(cam.fisheye){
       // Invert the radial projection on a camera-parallel plane at the model's depth.
       const length=Math.hypot(x,y),radius=Math.min(length/cam.focal,.98);
@@ -375,20 +392,132 @@
     }
     return result;
   }
-  function projectedLines(state, width, height) {
-    const cam = camera(state, width, height);
-    if(cam.fisheye)return fisheyeLines(state,cam);
+  // World-anchored ground mesh: real lines on the plane y = base, spaced by the
+  // model cell size and centered on the model. Because every line is projected
+  // with `segment` (the same projection the model uses), the grid coincides
+  // with the model's edges under any lens, no matter how aggressive.
+  function floorMesh(state, cam) {
+    const out = [];
+    if (cam.ortho) return out;
+    const scale = state.boxSize || 1;                 // one cell = one model unit
+    const name = state.referenceModel || 'box';
+    const mpos = (state.modelPositions && state.modelPositions[name]) || [0, 0, 0];
+    const cx = mpos[0], base = mpos[1] - scale, cz = mpos[2]; // floor sits under the model
+    const half = axis => Math.max(1, Math.floor((state[axis + 'Count'] || 16) / 2));
+    const hx = half('x'), hz = half('z'), hy = state.yCount || 12;
+    // Extent of the mesh along each ground axis (world units from center).
+    const extX = hx * scale, extZ = hz * scale;
+
+    // Lines running along Z (constant X): these read as the "x" family (depth
+    // stripes across the floor). Colour by the axis they travel.
+    if (state.xLines !== false) {
+      for (let i = -hx; i <= hx; i++) {
+        const x = cx + i * scale;
+        const seg = segment([x, base, cz - extZ], [x, base, cz + extZ], cam);
+        if (seg) out.push({ points: seg, axis: 'z' });
+      }
+    }
+    // Lines running along X (constant Z): the "z" family.
+    if (state.zLines !== false) {
+      for (let k = -hz; k <= hz; k++) {
+        const zc = cz + k * scale;
+        const seg = segment([cx - extX, base, zc], [cx + extX, base, zc], cam);
+        if (seg) out.push({ points: seg, axis: 'x' });
+      }
+    }
+    // Vertical lines rising from the floor grid nodes along the perimeter, so
+    // walls/heights have guides too (the "y" family).
+    if (state.yLines) {
+      const hgt = hy * scale;
+      const perim = [];
+      for (let i = -hx; i <= hx; i++) { perim.push([cx + i*scale, base, cz - extZ]); perim.push([cx + i*scale, base, cz + extZ]); }
+      for (let k = -hz; k <= hz; k++) { perim.push([cx - extX, base, cz + k*scale]); perim.push([cx + extX, base, cz + k*scale]); }
+      for (const p of perim) {
+        const seg = segment(p, [p[0], base + hgt, p[2]], cam);
+        if (seg) out.push({ points: seg, axis: 'y' });
+      }
+    }
+    return out;
+  }
+  function projectedLines(state, realWidth, realHeight) {
+    const realCam = camera(state, realWidth, realHeight);
+    if(realCam.fisheye)return fisheyeLines(state,realCam);
+    const z = realCam.zoom || 1;
+    // Generate analytic guides in a VIRTUAL frame sized realWidth/z × realHeight/z
+    // (all local `width`/`height` below refer to this virtual frame), then map
+    // each finished line back to the real frame with the zoom transform in add().
+    // This makes the grid fill the whole visible area at any zoom, including
+    // zoom-out (no empty borders).
+    const width = realWidth / z, height = realHeight / z;
+    const cam = z === 1 ? realCam : {
+      ...realCam,
+      width, height,
+      cx: width / 2 + (realCam.cx - realWidth / 2) / z,
+      cy: height / 2 + (realCam.cy - realHeight / 2) / z,
+      zoom: 1
+    };
     const lines=[], seen=new Set();
+    const toReal=p=>[ realWidth/2 + (p[0]-width/2)*z, realHeight/2 + (p[1]-height/2)*z ];
     const add=(points,axis)=>{
       if(!points)return;
-      const key=lineKey(points,width,height);
+      if(z!==1){
+        points=points.map(toReal);
+        const c=clip2d(points[0],points[points.length-1],realWidth,realHeight);
+        if(!c)return; points=c;
+      }
+      const key=lineKey(points,realWidth,realHeight);
       if(seen.has(key))return;seen.add(key);
       lines.push({points,color:state.showAxes?axisColors[axis]:state.color,opacity:state.opacity/100,width:state.lineWidth,dash:[],axis});
     };
+    // World-anchored floor mesh: real lines on the ground plane (y = base),
+    // spaced by the model cell size and centered on the model, so the grid
+    // coincides with the model's edges at ANY perspective (including very
+    // aggressive lenses). Uses `segment` — the exact projection the model uses.
+    if (state.showGrid && !cam.ortho && state.gridStyle === 'floor') {
+      floorMesh(state, realCam).forEach(({ points, axis }) => {
+        if (!points) return;
+        // Real-camera projection already includes zoom; no virtual-frame remap.
+        const key = lineKey(points, realWidth, realHeight);
+        if (seen.has(key)) return; seen.add(key);
+        lines.push({ points, color: state.showAxes ? axisColors[axis] : state.color, opacity: state.opacity/100, width: state.lineWidth, dash: [], axis });
+      });
+      if (state.showGrid && state.showHorizon) addHorizon();
+      return lines;
+    }
     if(state.showGrid)['x','z','y'].forEach(axis=>{
       if(!state[axis+'Lines'])return;
       const index={x:0,y:1,z:2}[axis],count=state[axis+'Count'];
-      if(!cam.ortho&&state.gridStyle==='space'){
+      if(cam.ortho){
+        // Orthographic: a uniform family of `count` parallel lines. The lines of
+        // all three axes share the same lattice pitch so their intersections
+        // coincide (clean isometric triangles). We sweep the perpendicular
+        // offset across the visible range and place exactly `count` lines.
+        const dir=[0,0,0];dir[index]=1;
+        // Projected direction of this axis on screen.
+        const dScreen=[dot(dir,cam.right)*cam.scale, -dot(dir,cam.up)*cam.scale];
+        const dLen=Math.hypot(dScreen[0],dScreen[1]);
+        if(dLen<1e-8){/* axis seen end-on: no lines */}
+        else{
+          // Perpendicular (normal) to the family on screen.
+          const nx=-dScreen[1]/dLen, ny=dScreen[0]/dLen;
+          // Screen position of the world origin.
+          const o=[cam.cx-dot(cam.eye,cam.right)*cam.scale, cam.cy+dot(cam.eye,cam.up)*cam.scale];
+          // Offset (along the normal) of the 4 frame corners relative to origin.
+          const corners=[[0,0],[width,0],[width,height],[0,height]];
+          const offs=corners.map(p=>(p[0]-o[0])*nx+(p[1]-o[1])*ny);
+          const lo=Math.min(...offs),hi=Math.max(...offs),span=hi-lo;
+          for(let t=0;t<count;t++){
+            // Even spacing across the visible band; centered so nodes align.
+            const off=lo+span*(t+0.5)/count;
+            // A point on this line: origin + off along the normal.
+            const px=o[0]+nx*off, py=o[1]+ny*off;
+            // Line through (px,py) with direction dScreen; clip to the frame.
+            const seg=clip2d([px-dScreen[0]*1e4/dLen, py-dScreen[1]*1e4/dLen],
+                             [px+dScreen[0]*1e4/dLen, py+dScreen[1]*1e4/dLen], width, height);
+            add(seg, axis);
+          }
+        }
+      }else if(state.gridStyle==='space'){
         // An open 3D lattice: lines extend through the entire composition.
         // Two transverse world coordinates define each infinite axis line.
         const basis={x:[1,2],y:[0,2],z:[0,1]}[axis],step=4;
@@ -414,7 +543,11 @@
         regularGuides(cam,index,count).forEach(points=>add(points,axis));
       }
     });
-    if (state.showGrid && state.showHorizon && !cam.ortho) {
+    if (state.showGrid && state.showHorizon) addHorizon();
+    return lines;
+
+    function addHorizon() {
+      if (cam.ortho) return;
       const a = cam.right[1], b = cam.up[1], c = cam.forward[1];
       let points = null;
       if (Math.abs(b) > 1e-6) {
@@ -424,9 +557,11 @@
         const x = cam.cx - c * cam.focal / a;
         points = clip2d([x, 0], [x, height], width, height);
       }
-      if (points) lines.push({ points, color: state.horizonColor, opacity: state.opacity/100, width: state.lineWidth, dash: [8, 5], horizon: true });
+      if (points) {
+        if (z !== 1) { points = points.map(toReal); points = clip2d(points[0], points[1], realWidth, realHeight); }
+        if (points) lines.push({ points, color: state.horizonColor, opacity: state.opacity/100, width: state.lineWidth, dash: [8, 5], horizon: true });
+      }
     }
-    return lines;
   }
   const vertices = [[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
   const faces = [

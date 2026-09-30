@@ -6,147 +6,178 @@
 </head>
 <body>
   <div class="panel">
-    <div class="preview-wrap">
-      <img id="preview" class="preview" alt="Pré-visualização da grade">
-      <div class="preview-hint" id="docInfo">Nenhum documento aberto</div>
-    </div>
-    <div class="mode-bar" role="group" aria-label="Modo de interação no preview">
-      <button type="button" data-mode="orbit" class="active">Girar</button>
-      <button type="button" data-mode="pan">Enquadrar</button>
-      <button type="button" data-mode="model">Modelo</button>
-      <button type="button" data-mode="depth">Profundidade</button>
-    </div>
-
-    <div class="cube-wrap">
-      <img id="cube" class="cube" alt="Cubo de orientação. Arraste para girar.">
-      <div class="view-buttons cube-views">
-        <button type="button" data-view="front">Frente</button>
-        <button type="button" data-view="right">Lado</button>
-        <button type="button" data-view="top">Topo</button>
-        <button type="button" data-view="iso">¾</button>
+    <!-- A cena ocupa a largura do painel; o Photoshop fornece o titulo. -->
+    <div class="top">
+      <div class="preview-wrap">
+        <svg id="previewSvg" class="preview" preserveAspectRatio="none"></svg>
+        <img id="previewA" class="preview buf-hidden" alt="Pré-visualização da grade">
+        <img id="previewB" class="preview buf-hidden" alt="">
+        <div class="preview-hint" id="docInfo">Nenhum documento</div>
       </div>
     </div>
 
-    <div class="scroll">
-      <!-- CÂMERA -->
-      <section class="drawer open" data-drawer>
-        <button class="drawer-head" type="button"><span class="chevron">▸</span> Câmera</button>
-        <div class="drawer-body">
-          <div class="row">
-            <label>Perspectiva</label>
-            <sp-dropdown id="preset" class="dd"><sp-menu slot="options">
-              <sp-menu-item value="free">Livre</sp-menu-item>
-              <sp-menu-item value="one">1 ponto de fuga</sp-menu-item>
-              <sp-menu-item value="two">2 pontos de fuga</sp-menu-item>
-              <sp-menu-item value="three">3 pontos de fuga</sp-menu-item>
-              <sp-menu-item value="five">Olho de peixe</sp-menu-item>
-              <sp-menu-item value="ortho">Ortográfica</sp-menu-item>
-            </sp-menu></sp-dropdown>
-          </div>
-          <div class="row">
-            <label>Lente</label>
-            <sp-dropdown id="lensPreset" class="dd"><sp-menu slot="options">
-              <sp-menu-item value="">Personalizada</sp-menu-item>
-              <sp-menu-item value="10">10 mm</sp-menu-item><sp-menu-item value="14">14 mm</sp-menu-item>
-              <sp-menu-item value="24">24 mm</sp-menu-item><sp-menu-item value="35">35 mm</sp-menu-item>
-              <sp-menu-item value="50">50 mm</sp-menu-item><sp-menu-item value="85">85 mm</sp-menu-item>
-              <sp-menu-item value="135">135 mm</sp-menu-item><sp-menu-item value="200">200 mm</sp-menu-item>
-              <sp-menu-item value="300">300 mm</sp-menu-item>
-            </sp-menu></sp-dropdown>
-          </div>
-          <div class="slider" data-key="focalLength"><div class="slider-head"><label>Distância focal (mm)</label><span class="val"></span></div><input type="range" min="10" max="300" step="1"></div>
-          <div class="slider" data-key="distortion"><div class="slider-head"><label>Distorção (olho de peixe)</label><span class="val"></span></div><input type="range" min="0" max="100" step="1"></div>
-          <div class="slider" data-key="yaw"><div class="slider-head"><label>Rotação horizontal</label><span class="val"></span></div><input type="range" min="-180" max="180" step="1"></div>
-          <div class="slider" data-key="pitch"><div class="slider-head"><label>Inclinação</label><span class="val"></span></div><input type="range" min="-180" max="180" step="0.5"></div>
-          <div class="slider" data-key="roll"><div class="slider-head"><label>Inclinação do quadro (roll)</label><span class="val"></span></div><input type="range" min="-180" max="180" step="1"></div>
-          <div class="slider" data-key="distance"><div class="slider-head"><label>Distância da câmera</label><span class="val"></span></div><input type="range" min="4" max="500" step="0.1"></div>
-          <div class="slider" data-key="viewZoom"><div class="slider-head"><label>Zoom da cena (%)</label><span class="val"></span></div><input type="range" min="25" max="300" step="1"></div>
-          <div class="two-col">
-            <div class="slider" data-key="panX"><div class="slider-head"><label>Enq. horizontal</label><span class="val"></span></div><input type="range" min="-100" max="100" step="1"></div>
-            <div class="slider" data-key="panY"><div class="slider-head"><label>Enq. vertical</label><span class="val"></span></div><input type="range" min="-100" max="100" step="1"></div>
-          </div>
-          <button id="resetBtn" class="secondary full" type="button">↺ Restaurar cena</button>
-        </div>
-      </section>
+    <!-- Abas -->
+    <div class="tabs" role="tablist">
+      <button type="button" data-tab="camera" class="active" role="tab">Câmera</button>
+      <button type="button" data-tab="grid" role="tab">Grade</button>
+      <button type="button" data-tab="model" role="tab">Modelo</button>
+    </div>
 
-      <!-- REFERÊNCIA 3D -->
-      <section class="drawer open" data-drawer>
-        <button class="drawer-head" type="button"><span class="chevron">▸</span> Referência 3D</button>
-        <div class="drawer-body">
-          <div class="row">
-            <label><input type="checkbox" data-key="showCube"> Mostrar modelo</label>
-            <sp-dropdown id="referenceModel" class="dd"><sp-menu slot="options">
-              <sp-menu-item value="box">Caixa</sp-menu-item>
-              <sp-menu-item value="table">Mesa</sp-menu-item>
-              <sp-menu-item value="room">Quarto</sp-menu-item>
-            </sp-menu></sp-dropdown>
-          </div>
-          <div class="slider" data-key="boxSize"><div class="slider-head"><label>Tamanho</label><span class="val"></span></div><input type="range" min="0.5" max="2.5" step="0.1"></div>
-          <div class="subheading">Posição (unidades)</div>
-          <div class="xyz">
-            <label>X <input type="number" id="posX" step="0.5" min="-100" max="100"></label>
-            <label>Y <input type="number" id="posY" step="0.5" min="-100" max="100"></label>
-            <label>Z <input type="number" id="posZ" step="0.5" min="-100" max="100"></label>
-          </div>
-          <div class="two-btn">
-            <button id="centerModelBtn" class="secondary" type="button">↺ Centralizar</button>
-            <button id="fitModelBtn" class="secondary" type="button">Enquadrar</button>
-          </div>
-          <div class="subheading">Profundidade — eixo/PF</div>
-          <sp-dropdown id="depthAxis" class="dd-full"><sp-menu slot="options">
-            <sp-menu-item value="">Selecione um ponto de fuga</sp-menu-item>
+    <div class="tab-scroll">
+      <!-- ABA CÂMERA -->
+      <section class="tab-body" data-tabbody="camera">
+        <div class="row">
+          <label>Perspectiva</label>
+          <sp-dropdown id="preset" class="dd"><sp-menu slot="options">
+            <sp-menu-item value="free">Livre</sp-menu-item>
+            <sp-menu-item value="one">1 ponto</sp-menu-item>
+            <sp-menu-item value="two">2 pontos</sp-menu-item>
+            <sp-menu-item value="three">3 pontos</sp-menu-item>
+            <sp-menu-item value="five">Olho de peixe</sp-menu-item>
+            <sp-menu-item value="ortho">Ortográfica</sp-menu-item>
           </sp-menu></sp-dropdown>
         </div>
-      </section>
 
-      <!-- LINHAS DA GRADE -->
-      <section class="drawer open" data-drawer>
-        <button class="drawer-head" type="button"><span class="chevron">▸</span> Linhas da grade</button>
-        <div class="drawer-body">
+        <div class="row">
+          <label>Lente</label>
+          <sp-dropdown id="lensPreset" class="dd"><sp-menu slot="options">
+            <sp-menu-item value="">Personalizada</sp-menu-item>
+            <sp-menu-item value="10">10 mm</sp-menu-item><sp-menu-item value="14">14 mm</sp-menu-item>
+            <sp-menu-item value="24">24 mm</sp-menu-item><sp-menu-item value="35">35 mm</sp-menu-item>
+            <sp-menu-item value="50">50 mm</sp-menu-item><sp-menu-item value="85">85 mm</sp-menu-item>
+            <sp-menu-item value="135">135 mm</sp-menu-item><sp-menu-item value="200">200 mm</sp-menu-item>
+            <sp-menu-item value="300">300 mm</sp-menu-item>
+          </sp-menu></sp-dropdown>
+        </div>
+        <div id="orthoAngles" class="ortho-angles">
+          <div class="angle-row">
+            <label>Rotação</label><input type="number" id="yawDeg" step="1" min="-180" max="180"><small>°</small>
+            <label>Inclin.</label><input type="number" id="pitchDeg" step="1" min="-89" max="89"><small>°</small>
+          </div>
           <div class="row">
-            <label>Construção</label>
-            <sp-dropdown id="gridStyle" class="dd"><sp-menu slot="options">
-              <sp-menu-item value="rays">Raios de fuga</sp-menu-item>
-              <sp-menu-item value="space">Malha espacial</sp-menu-item>
+            <label>Vista</label>
+            <sp-dropdown id="orthoPreset" class="dd"><sp-menu slot="options">
+              <sp-menu-item value="custom">Personalizada</sp-menu-item>
+              <sp-menu-item value="iso">Isométrica</sp-menu-item>
+              <sp-menu-item value="dimetric">Dimétrica</sp-menu-item>
+              <sp-menu-item value="trimetric">Trimétrica</sp-menu-item>
+              <sp-menu-item value="front">Frente</sp-menu-item>
+              <sp-menu-item value="right">Lado</sp-menu-item>
+              <sp-menu-item value="top">Topo</sp-menu-item>
             </sp-menu></sp-dropdown>
           </div>
-          <div class="grid-presets">
-            <button type="button" data-grid-preset="clean">Limpa</button>
-            <button type="button" data-grid-preset="study">Anotada</button>
-            <button type="button" data-grid-preset="lines">Só linhas</button>
-          </div>
-          <div class="subheading">Direções de fuga</div>
-          <div class="toggles">
-            <label><input type="checkbox" data-key="xLines" checked> X</label>
-            <label><input type="checkbox" data-key="zLines" checked> Z</label>
-            <label><input type="checkbox" data-key="yLines" checked> Y</label>
-          </div>
-          <div class="slider" data-key="xCount"><div class="slider-head"><label>Guias X</label><span class="val"></span></div><input type="range" min="1" max="64" step="1"></div>
-          <div class="slider" data-key="zCount"><div class="slider-head"><label>Guias Z</label><span class="val"></span></div><input type="range" min="1" max="64" step="1"></div>
-          <div class="slider" data-key="yCount"><div class="slider-head"><label>Guias Y</label><span class="val"></span></div><input type="range" min="1" max="64" step="1"></div>
-          <div class="subheading">Traço</div>
-          <div class="slider" data-key="opacity"><div class="slider-head"><label>Opacidade</label><span class="val"></span></div><input type="range" min="10" max="100" step="1"></div>
-          <div class="slider" data-key="lineWidth"><div class="slider-head"><label>Espessura</label><span class="val"></span></div><input type="range" min="0.5" max="4" step="0.1"></div>
-          <div class="row"><label for="gridColor">Cor da grade</label><span class="color-field"><span class="swatch" id="gridSwatch"></span><input type="text" id="gridColor" value="#414447" maxlength="7"></span></div>
-          <div class="row"><label for="horizonColor">Cor do horizonte</label><span class="color-field"><span class="swatch" id="horizonSwatch"></span><input type="text" id="horizonColor" value="#b77728" maxlength="7"></span></div>
-          <div class="toggles">
-            <label><input type="checkbox" data-key="showHorizon" checked> Horizonte</label>
-            <label><input type="checkbox" data-key="showAxes"> Cores por direção</label>
-            <label><input type="checkbox" data-key="showVps" checked> Pontos de fuga</label>
-            <label><input type="checkbox" data-key="showGrid" checked> Mostrar grade</label>
-          </div>
+        </div>
+
+        <div class="section-title">Óptica</div>
+        <div class="sliders">
+          <sp-slider id="focalLength" data-key="focalLength" min="10" max="300" step="1"><sp-label slot="label">Distância focal (mm)</sp-label></sp-slider>
+          <sp-slider id="distortion" data-key="distortion" min="0" max="100" step="1" hidden><sp-label slot="label">Distorção (%)</sp-label></sp-slider>
+          <sp-slider id="viewZoom" data-key="viewZoom" min="25" max="300" step="1"><sp-label slot="label">Zoom da cena (%)</sp-label></sp-slider>
+        </div>
+
+        <div class="section-title">Enquadramento</div>
+        <div class="slider-with-reset">
+          <sp-slider id="roll" data-key="roll" min="-180" max="180" step="1"><sp-label slot="label">Roll (inclinação)</sp-label></sp-slider>
+          <span id="rollVal" class="mini-val">0°</span>
+        </div>
+
+        <button id="resetBtn" class="secondary full" type="button">↺ Restaurar cena</button>
+      </section>
+
+      <!-- ABA GRADE -->
+      <section class="tab-body" data-tabbody="grid" hidden>
+        <div class="row">
+          <label>Construção</label>
+          <sp-dropdown id="gridStyle" class="dd"><sp-menu slot="options">
+            <sp-menu-item value="floor">Chão alinhado</sp-menu-item>
+            <sp-menu-item value="rays">Raios de fuga</sp-menu-item>
+            <sp-menu-item value="space">Malha espacial</sp-menu-item>
+          </sp-menu></sp-dropdown>
+        </div>
+        <div class="row">
+          <label>Estilo</label>
+          <sp-dropdown id="colorStyle" class="dd"><sp-menu slot="options">
+            <sp-menu-item value="gray">Linha cinza</sp-menu-item>
+            <sp-menu-item value="black">Linha preta</sp-menu-item>
+            <sp-menu-item value="color">Linhas coloridas</sp-menu-item>
+          </sp-menu></sp-dropdown>
+        </div>
+
+        <div class="section-title">Número de linhas guias</div>
+        <div class="guide-counts">
+          <div class="count-row"><label for="xCountNum">X</label><input type="number" id="xCountNum" class="count-num" min="1" max="64" step="1"><sp-checkbox id="xLines" data-key="xLines" aria-label="Mostrar guias X" checked></sp-checkbox></div>
+          <div class="count-row"><label for="zCountNum">Z</label><input type="number" id="zCountNum" class="count-num" min="1" max="64" step="1"><sp-checkbox id="zLines" data-key="zLines" aria-label="Mostrar guias Z" checked></sp-checkbox></div>
+          <div class="count-row"><label for="yCountNum">Y</label><input type="number" id="yCountNum" class="count-num" min="1" max="64" step="1"><sp-checkbox id="yLines" data-key="yLines" aria-label="Mostrar guias Y" checked></sp-checkbox></div>
+        </div>
+
+        <div class="section-title">Traço</div>
+        <div class="sliders">
+          <sp-slider id="opacity" data-key="opacity" min="10" max="100" step="1"><sp-label slot="label">Opacidade</sp-label></sp-slider>
+          <sp-slider id="lineWidth" data-key="lineWidth" min="0.5" max="4" step="0.1"><sp-label slot="label">Espessura</sp-label></sp-slider>
+        </div>
+
+        <div class="toggles wide">
+          <sp-checkbox id="showVps" data-key="showVps" checked>Pontos de fuga</sp-checkbox>
+          <sp-checkbox id="showGrid" data-key="showGrid" checked>Mostrar grade</sp-checkbox>
+        </div>
+      </section>
+
+      <!-- ABA MODELO -->
+      <section class="tab-body" data-tabbody="model" hidden>
+        <div class="row">
+          <sp-checkbox id="showCube" data-key="showCube">Mostrar</sp-checkbox>
+          <sp-dropdown id="referenceModel" class="dd"><sp-menu slot="options">
+            <sp-menu-item value="box">Caixa</sp-menu-item>
+            <sp-menu-item value="table">Mesa</sp-menu-item>
+            <sp-menu-item value="room">Quarto</sp-menu-item>
+          </sp-menu></sp-dropdown>
+        </div>
+
+        <div class="section-title">Dimensões</div>
+        <div class="sliders">
+          <sp-slider id="boxSize" data-key="boxSize" min="0.5" max="2.5" step="0.1"><sp-label slot="label">Tamanho</sp-label></sp-slider>
+          <sp-slider id="modelOpacity" min="10" max="100" step="1" value="85"><sp-label slot="label">Opacidade do modelo</sp-label></sp-slider>
+        </div>
+
+        <div class="two-btn">
+          <button id="centerModelBtn" class="secondary" type="button">Centralizar</button>
+          <button id="fitModelBtn" class="secondary" type="button">Enquadrar</button>
+        </div>
+        <button id="modelAdvancedBtn" type="button" class="disclosure" aria-expanded="false">Posição e profundidade</button>
+        <div id="modelAdvanced" hidden>
+        <div class="section-title">Posição no espaço</div>
+        <div class="xyz">
+          <label>X <input type="number" id="posX" step="0.5" min="-100" max="100"></label>
+          <label>Y <input type="number" id="posY" step="0.5" min="-100" max="100"></label>
+          <label>Z <input type="number" id="posZ" step="0.5" min="-100" max="100"></label>
+        </div>
+
+        <div class="section-title">Movimento (arraste no preview)</div>
+        <div class="row">
+          <label>Modo</label>
+          <sp-dropdown id="moveMode" class="dd"><sp-menu slot="options">
+            <sp-menu-item value="orbit">Girar câmera</sp-menu-item>
+            <sp-menu-item value="plane">Mover no plano</sp-menu-item>
+            <sp-menu-item value="depth">Profundidade por PF</sp-menu-item>
+          </sp-menu></sp-dropdown>
+        </div>
+        <div class="row" id="depthAxisRow" hidden>
+          <label>Direção</label>
+          <sp-dropdown id="depthAxis" class="dd"><sp-menu slot="options">
+            <sp-menu-item value="">Selecione um PF</sp-menu-item>
+          </sp-menu></sp-dropdown>
+        </div>
         </div>
       </section>
     </div>
 
+    <!-- Ações fixas -->
     <div class="actions">
-      <button id="applyBtn" class="primary full" disabled>Aplicar grade na camada</button>
-      <div class="action-row">
-        <button id="exportBtn" class="secondary">PNG</button>
-        <button id="exportSvgBtn" class="secondary">SVG</button>
-        <label class="live"><input type="checkbox" id="liveApply"> Atualizar ao mover</label>
+      <div class="apply-row">
+        <button id="applyBtn" class="primary" disabled>Aplicar na camada</button>
+        <button id="refreshBtn" class="secondary" disabled>Atualizar malha</button>
       </div>
-      <div class="status" id="status">Abra um documento no Photoshop para começar.</div>
+      <div class="status" id="status">Abra um documento para começar.</div>
     </div>
   </div>
 

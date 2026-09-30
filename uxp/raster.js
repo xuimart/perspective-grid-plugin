@@ -200,5 +200,31 @@
     return png.buffer;
   }
 
-  root.GridRaster = { renderLines, hexToRgb, encodePng };
+  // Fill a convex/simple polygon (array of [x,y]) into the RGBA buffer using a
+  // scanline fill. Used to render solid model faces (painter's order handled by
+  // the caller). alpha in 0..1.
+  function fillPolygon(buf, width, height, pts, r, g, b, alpha) {
+    if (!pts || pts.length < 3) return;
+    let minY = Infinity, maxY = -Infinity;
+    for (const p of pts) { if (p[1] < minY) minY = p[1]; if (p[1] > maxY) maxY = p[1]; }
+    minY = Math.max(0, Math.floor(minY));
+    maxY = Math.min(height - 1, Math.ceil(maxY));
+    for (let y = minY; y <= maxY; y++) {
+      const yc = y + 0.5;
+      const xs = [];
+      for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+        const a = pts[i], c = pts[j];
+        if ((a[1] <= yc && c[1] > yc) || (c[1] <= yc && a[1] > yc)) {
+          xs.push(a[0] + (yc - a[1]) / (c[1] - a[1]) * (c[0] - a[0]));
+        }
+      }
+      xs.sort((p, q) => p - q);
+      for (let k = 0; k + 1 < xs.length; k += 2) {
+        const x0 = Math.max(0, Math.round(xs[k])), x1 = Math.min(width - 1, Math.round(xs[k + 1]));
+        for (let x = x0; x <= x1; x++) blend(buf, width, height, x, y, r, g, b, alpha);
+      }
+    }
+  }
+
+  root.GridRaster = { renderLines, hexToRgb, encodePng, fillPolygon, hexToRgb };
 })(typeof window !== 'undefined' ? window : globalThis);

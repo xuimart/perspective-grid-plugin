@@ -3,3 +3,10 @@ dist/
 *.log
 server-error.log
 server.log
+
+# Backups temporarios de versoes anteriores (nao versionar)
+uxp/_backup-*/
+
+# Screenshots de QA (artefatos gerados, nao versionar)
+entrega-uxp/.qa/
+entrega-uxp/.qa-final/

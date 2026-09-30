@@ -126,8 +126,21 @@ test('reference box size changes the box but never its camera or guide geometry'
   const s=G.normalize(),cam=G.camera(s,1600,1000);
   const small=G.cubeFaces(cam,.5),large=G.cubeFaces(cam,2);
   assert.notDeepEqual(small.find(f=>f.key==='front').points,large.find(f=>f.key==='front').points);
-  assert.deepEqual(G.projectedLines(s,1600,1000),G.projectedLines({...s,showCube:true,boxSize:2},1600,1000));
-  assert.equal(G.svg(s),G.svg({...s,showCube:true,boxSize:2}));
+  // The ray-fan/space grids are independent of the model box size.
+  const r=G.normalize({gridStyle:'rays'});
+  assert.deepEqual(G.projectedLines(r,1600,1000),G.projectedLines({...r,showCube:true,boxSize:2},1600,1000));
+  assert.equal(G.svg(r),G.svg({...r,showCube:true,boxSize:2}));
+});
+
+test('floor grid is anchored to the model: it scales with boxSize and follows the model',()=>{
+  const s=G.normalize({gridStyle:'floor',showCube:true,yaw:31,pitch:17});
+  // Cell size follows boxSize, so the projected grid must differ.
+  assert.notDeepEqual(G.projectedLines(s,1600,1000),G.projectedLines({...s,boxSize:2.5},1600,1000));
+  // Moving the model shifts the anchored floor grid too.
+  const moved=G.moveModel(s,60,-30,1600,1000);
+  assert.notDeepEqual(G.projectedLines(moved,1600,1000),G.projectedLines(s,1600,1000));
+  // Every floor line is finite and inside the frame.
+  for(const l of G.projectedLines(s,1600,1000)) for(const p of l.points) assert.ok(p.every(Number.isFinite));
 });
 
 test('locked perspective modes retain exactly their vanishing-point count through drags',()=>{
@@ -184,7 +197,7 @@ test('fisheye distortion preserves model framing and distance compensation respe
 
 test('model translation follows screen drags in 3D while camera and grid remain fixed',()=>{
   for(const preset of ['free','one','two','three','five','ortho'])for(const viewZoom of [50,150,300]){
-    const s=G.normalize({preset,viewZoom,showCube:true,focalLength:24,yaw:31,pitch:17,panX:7,panY:-3});
+    const s=G.normalize({preset,viewZoom,showCube:true,gridStyle:'rays',focalLength:24,yaw:31,pitch:17,panX:7,panY:-3});
     const cam=G.camera(s,1600,1000),p=s.modelPositions.box,q=G.project(p,cam);
     const moved=G.moveModel(s,40,-25,1600,1000),next=moved.modelPositions.box,r=G.project(next,cam);
     assert.ok(Math.abs(r[0]-q[0]-40)<1e-6,`${preset}: horizontal drag`);
@@ -229,7 +242,7 @@ test('lens framing compensation accounts for translated model geometry',()=>{
 
 test('depth drag translates a rigid model along camera forward without changing optics or grid',()=>{
   for(const preset of ['free','one','two','three','five','ortho']){
-    const s=G.normalize({preset,showCube:true,focalLength:35,yaw:31,pitch:17,modelPositions:{box:[2,1,0]}});
+    const s=G.normalize({preset,showCube:true,gridStyle:'rays',focalLength:35,yaw:31,pitch:17,modelPositions:{box:[2,1,0]}});
     const cam=G.camera(s,1600,1000),p=G.cameraPoint(s.modelPositions.box,cam);
     const far=G.moveModelDepth(s,-200,1000,3),q=G.cameraPoint(far.modelPositions.box,cam);
     assert.ok(q[2]>p[2]);assert.ok(Math.abs(q[0]-p[0])<1e-9);assert.ok(Math.abs(q[1]-p[1])<1e-9);
@@ -283,7 +296,7 @@ test('pointed vanishing-point guides select the corresponding world axes and lab
 
 test('axis drag changes only one world coordinate and retains the rigid model and grid',()=>{
   for(const preset of ['one','two','three','five','ortho']){
-    const s=G.normalize({preset,showCube:true,focalLength:14,yaw:43,pitch:20,modelPositions:{box:[2,1,0]}});
+    const s=G.normalize({preset,showCube:true,gridStyle:'rays',focalLength:14,yaw:43,pitch:20,modelPositions:{box:[2,1,0]}});
     const cam=G.camera(s,1600,1000);
     for(const a of G.modelAxes(s,1600,1000)){
       const i=['x','y','z'].indexOf(a.axis),expected=[...s.modelPositions.box];expected[i]+=3;
