@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#202223">
+  <title>Perspective Grid — protótipo interativo</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app">
+    <header class="app-header">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">pg.</span><div><strong>Perspective Grid</strong><span>ESTÚDIO DE PERSPECTIVA</span></div></div>
+      <div class="header-meta"><span class="live-dot"></span> Protótipo interativo <span class="version">12</span></div>
+      <button class="quiet" id="helpBtn" aria-label="Mostrar atalhos">Ajuda <kbd>?</kbd></button>
+    </header>
+    <main class="studio">
+      <section class="workspace" aria-label="Área de composição">
+        <div class="workspace-toolbar">
+          <div class="tools" role="group" aria-label="Interação com a cena">
+            <button id="orbitBtn" class="tool active" aria-pressed="true" title="Girar (1)"><span aria-hidden="true">↻</span> Girar</button>
+            <button id="panBtn" class="tool" aria-pressed="false" title="Mover (2)"><span aria-hidden="true">✥</span> Mover</button>
+          </div>
+          <div class="document-options">
+            <label class="sr-only" for="aspect">Formato do documento</label>
+            <select id="aspect"><option value="1.6">Horizontal 16:10</option><option value="1">Quadrado 1:1</option><option value="0.75">Vertical 3:4</option></select>
+            <button id="imageBtn" class="quiet">+ Referência</button>
+            <input type="file" id="imageFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+          </div>
+        </div>
+        <div class="stage" id="stage">
+          <div class="artboard" id="artboard"><canvas id="scene" aria-label="Grade de perspectiva 3D interativa. Arraste para girar, Shift e arraste para mover; use os controles do painel pelo teclado."></canvas></div>
+          <div class="stage-note" id="stageNote"><span class="live-dot"></span> CUBO + GRADE SINCRONIZADOS</div>
+          <div class="reference-chip" id="referenceChip" hidden><span id="referenceName"></span><button id="removeImage" aria-label="Remover imagem de referência">×</button></div>
+          <div class="stage-hint" id="stageHint">Arraste para girar <span>·</span> Shift + arraste: modelo <span>·</span> Scroll para zoom</div>
+        </div>
+        <footer class="workspace-status"><span id="projectionStatus">Perspectiva livre</span><span id="cameraStatus">Câmera sincronizada</span><span id="guideCount"></span><span id="axisStatus" role="status" hidden></span><span id="dimensions">1600 × 1000</span><div class="view-zoom"><label for="viewZoom">Zoom <input id="viewZoom" data-key="viewZoom" type="number" min="25" max="300" step="5" value="100">%</label><button id="fitViewBtn" class="quiet small" title="Restaurar zoom da cena para 100%">100%</button></div></footer>
+      </section>
+      <aside class="panel" aria-label="Controles de perspectiva">
+        <div class="panel-title"><strong>Orientação</strong><button id="resetBtn" class="quiet small" title="Restaurar câmera, zoom, tamanho e posições dos modelos (R)">↺ Restaurar cena</button></div>
+        <div class="orientation">
+          <canvas id="cube" aria-label="Cubo de orientação. Arraste para girar a grade ou clique em uma face para alinhar a vista."></canvas>
+          <div class="orientation-caption">Arraste o cubo para girar a grade</div>
+          <div class="view-shortcuts" role="group" aria-label="Vistas da câmera"><button data-view="front">Frente</button><button data-view="right">Lado</button><button data-view="top">Topo</button><button data-view="iso">¾</button></div>
+        </div>
+        <div class="reference-controls">
+          <div class="box-control"><label><input type="checkbox" data-key="showCube"> Modelo 3D</label><label class="sr-only" for="referenceModel">Modelo de referência</label><select id="referenceModel"><option value="box">Caixa</option><option value="table">Mesa</option><option value="room">Quarto · diorama</option></select></div>
+          <div class="box-control"><label class="box-size" for="boxSize">Tamanho <input id="boxSize" data-key="boxSize" type="range" min="0.5" max="2.5" step="0.1" aria-label="Tamanho do modelo 3D"></label><div class="model-actions"><button class="quiet small" id="centerModelBtn" title="Restaurar posição do modelo" aria-label="Restaurar posição do modelo">↺</button><button class="quiet small" id="fitBtn" title="Ajustar a distância para enquadrar o modelo, mantendo a lente">Enquadrar modelo</button></div></div>
+        </div>
+        <p id="renderError" role="alert" hidden>Modelo 3D indisponível. A grade continua ativa. Recarregue a página para tentar novamente.</p>
+        <div class="panel-tabs" role="tablist" aria-label="Ajustes"><button id="cameraTab" role="tab" aria-selected="true" aria-controls="cameraPanel">Câmera</button><button id="gridTab" role="tab" aria-selected="false" aria-controls="gridPanel">Linhas da grade</button></div>
+        <div class="panel-scroll">
+          <section id="cameraPanel" role="tabpanel" aria-labelledby="cameraTab">
+            <div class="setting-line"><label for="preset">Perspectiva</label><select id="preset"><option value="free">Livre</option><option value="one">1 ponto de fuga</option><option value="two">2 pontos de fuga</option><option value="three">3 pontos de fuga</option><option value="five">Olho de peixe</option><option value="ortho">Ortográfica</option></select></div>
+            <div class="setting-line"><label for="lensPreset">Lente</label><select id="lensPreset"><option value="" disabled>Personalizada</option><option value="10">10 mm</option><option value="14">14 mm</option><option value="24">24 mm</option><option value="35">35 mm</option><option value="50">50 mm</option><option value="85">85 mm</option><option value="135">135 mm</option><option value="200">200 mm</option><option value="300">300 mm</option></select></div>
+            <div id="lensSliders"></div>
+            <div id="lensInfo" class="lens-info"></div>
+            <div id="fishSliders" hidden></div>
+            <div class="subheading">CÂMERA</div>
+            <div id="cameraSliders"></div>
+            <div class="subheading">ENQUADRAMENTO</div>
+            <div class="offsets"><label>Horizontal <span><input id="panX" data-key="panX" type="number" min="-100" max="100" step="1" value="0"><small>%</small></span></label><label>Vertical <span><input id="panY" data-key="panY" type="number" min="-100" max="100" step="1" value="0"><small>%</small></span></label></div>
+            <p class="control-note">O enquadramento desloca a grade e seus pontos de fuga.</p>
+          </section>
+          <section id="gridPanel" role="tabpanel" aria-labelledby="gridTab" hidden>
+            <div class="subheading first">PERFIS RÁPIDOS</div>
+            <div class="grid-presets" role="group" aria-label="Perfis rápidos da grade">
+              <button type="button" data-grid-preset="clean" aria-pressed="false" title="Raios de fuga com horizonte e pontos identificados">Limpa</button>
+              <button type="button" data-grid-preset="study" aria-pressed="false" title="Raios de fuga com cores por direção, horizonte e pontos identificados">Anotada</button>
+              <button type="button" data-grid-preset="lines" aria-pressed="false" title="Raios de fuga sem horizonte ou rótulos">Só linhas</button>
+            </div>
+            <div class="setting-line"><label for="gridStyle">Construção</label><select id="gridStyle"><option value="space">Malha espacial</option><option value="rays">Raios de fuga</option></select></div>
+            <div class="subheading first">DIREÇÕES DE FUGA</div>
+            <div class="plane-toggles directions"><label><input type="checkbox" data-key="xLines" checked><span>Direção X</span></label><label><input type="checkbox" data-key="zLines" checked><span>Direção Z</span></label><label><input type="checkbox" data-key="yLines" checked><span>Verticais Y</span></label></div>
+            <div id="guideSliders"></div>
+            <div class="subheading">TRAÇO</div>
+            <div id="gridSliders"></div>
+            <div class="setting-line"><label for="gridColor">Cor da grade</label><input id="gridColor" type="color" value="#4d5964"></div>
+            <div class="setting-line"><label for="horizonColor">Cor do horizonte</label><input id="horizonColor" type="color" value="#b77728"></div>
+            <div class="display-toggles"><label><input type="checkbox" data-key="showHorizon" checked> Linha do horizonte</label><label><input type="checkbox" data-key="showAxes"> Cores por direção</label><label><input type="checkbox" data-key="showVps" checked> Pontos de fuga</label><label><input type="checkbox" data-key="showGrid" checked> Mostrar grade</label></div>
+          </section>
+        </div>
+        <div class="panel-footer"><div class="export-row"><label class="sr-only" for="exportFormat">Formato de exportação</label><select id="exportFormat"><option value="png">PNG transparente</option><option value="svg">SVG vetorial</option></select><button id="exportBtn" class="primary">Exportar grade <span aria-hidden="true">↓</span></button></div><span class="export-note">2400 px · grade e marcações visíveis · fundo transparente</span></div>
+      </aside>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+  <dialog id="helpDialog">
+    <div class="dialog-heading"><h2>Explore a perspectiva</h2><button id="closeHelp" aria-label="Fechar ajuda">×</button></div>
+    <p>O modo selecionado permanece ativo ao mover a câmera. Em 1 ponto, o arrasto desloca o enquadramento. Em 2 pontos, gira horizontalmente e desloca verticalmente. Em 3 pontos, também inclina a câmera. Livre permite rotação irrestrita.</p>
+    <p>Olho de peixe permite girar e deslocar a cena, com distorção ajustável. Os cinco pontos da vista frontal acompanham a orientação; alguns ficam atrás da câmera ao girar. O scroll amplia a cena dentro do canvas, sem mudar a lente. Trocar lente ou distorção compensa a distância da câmera para preservar o tamanho aparente do modelo. Modelo 3D oferece caixa, mesa e diorama.</p>
+    <dl><dt>Arrastar o cubo ou a cena</dt><dd>Mover conforme o modo</dd><dt>Shift + arrastar</dt><dd>Mover somente o modelo 3D</dd><dt>Ctrl + Shift + arrastar</dt><dd>Seguir o eixo do ponto de fuga apontado</dd><dt>Mover / botão direito</dt><dd>Deslocar o enquadramento</dd><dt>Scroll</dt><dd>Zoom da cena dentro do canvas</dd><dt>1 / 2</dt><dd>Interação da câmera / mover</dd><dt>R</dt><dd>Restaurar no modo atual</dd><dt>G / C</dt><dd>Mostrar grade / modelo 3D</dd></dl>
+    <p class="help-note">Este protótipo funciona no navegador. Exporte a grade transparente para usar no Photoshop; a conexão direta com o aplicativo ainda não faz parte desta versão.</p>
+  </dialog>
+  <script src="geometry.js?v=12"></script>
+  <script src="reference-scene.bundle.js?v=12"></script>
+  <script src="app.js?v=12"></script>
+</body>
+</html>

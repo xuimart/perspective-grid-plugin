@@ -1,0 +1,46 @@
+{
+  "id": "com.xuimart.perspectivegrid",
+  "name": "Perspective Grid",
+  "version": "0.1.9",
+  "main": "index.html",
+  "manifestVersion": 6,
+  "host": {
+    "app": "PS",
+    "minVersion": "24.0.0"
+  },
+  "entrypoints": [
+    {
+      "type": "panel",
+      "id": "com.xuimart.perspectivegrid.panel",
+      "label": { "default": "Perspective Grid" },
+      "minimumSize": { "width": 320, "height": 420 },
+      "maximumSize": { "width": 1200, "height": 1800 },
+      "preferredDockedSize": { "width": 340, "height": 640 },
+      "preferredFloatingSize": { "width": 360, "height": 700 },
+      "icons": [
+        {
+          "width": 23,
+          "height": 23,
+          "path": "icons/icon.png",
+          "scale": [1, 2],
+          "theme": ["darkest", "dark", "medium", "lightest", "light", "all"]
+        }
+      ]
+    }
+  ],
+  "requiredPermissions": {
+    "localFileSystem": "plugin",
+    "allowCodeGenerationFromStrings": true
+  },
+  "icons": [
+    {
+      "width": 23,
+      "height": 23,
+      "path": "icons/icon.png",
+      "scale": [1, 2],
+      "theme": ["darkest", "dark", "medium", "lightest", "light", "all"],
+      "species": ["pluginList"]
+    }
+  ]
+}
+
