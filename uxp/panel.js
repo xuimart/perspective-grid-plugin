@@ -18,6 +18,9 @@
   let state;
   try { state = G.normalize(JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}); }
   catch (_) { state = G.normalize({}); }
+  // Migração: versões 0.8.0–0.8.2 usaram 'floor' como grade padrão. Volta ao
+  // estilo original 'rays' para quem já tinha o estado salvo.
+  if (state.gridStyle === 'floor') { state.gridStyle = 'rays'; }
 
   let doc = null;
   let gridLayerId = null;

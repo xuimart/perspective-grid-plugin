@@ -17,7 +17,7 @@
   const defaults = {
     yaw: 43, pitch: 5, roll: 0, fov: 35.638, focalLength: 35, distortion: 100, viewZoom: 100, distance: 16, panX: 0, panY: 0,
     projection: 'perspective', preset: 'free', density: 20, opacity: 80,
-    lineWidth: 1.5, color: '#414447', horizonColor: '#b77728', aspect: 1.6, gridStyle:'floor',
+    lineWidth: 1.5, color: '#414447', horizonColor: '#b77728', aspect: 1.6, gridStyle:'rays',
     xCount: 16, yCount: 12, zCount: 16, boxSize: 1.5, referenceModel: 'box',
     modelPositions: {box:[0,0,0],table:[0,0,0],room:[0,0,0]},
     xLines: true, yLines: true, zLines: true,
