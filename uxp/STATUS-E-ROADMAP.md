@@ -19,9 +19,17 @@ com a explicação.
 - [OK] Export PNG transparente (fallback Opção B) via encoder próprio.
 - [OK] Instalação via UPIA (.ccx) + script deploy-uxp.ps1. Versionado em git (tag v0.1.9).
 
+## Novidades v0.2.0 (ciclo 2)
+
+- [OK] Quatro modos de interação segmentados no preview: Girar / Enquadramento / Mover modelo / Profundidade.
+- [OK] Seletor de PF para profundidade (rótulo/eixo), ligado a G.moveModelOnAxis; selecionar ativa o modo Profundidade.
+- [OK] Campos XYZ de posição do modelo + Centralizar + Enquadrar (G.framingDistance com cantos das caixas).
+- [OK] Cubo de orientação desenhado em JS puro (via rasterizador), arrastável para girar; botões Frente/Lado/Topo/¾ ao lado.
+- [OK] Export SVG no painel (G.svg) além do PNG.
+
 ## Parcial — existe mas não conforme à spec
 
-- [PARCIAL] Layout do painel (seção 4): tem gavetas e rolagem, mas falta o cubo de orientação clicável, os quatro modos segmentados (Girar/Enquadramento/Modelo/Profundidade), e o estado textual (Sem documento/Pronto/Pendente/Aplicando/Erro) completo.
+- [PARCIAL] Layout do painel (seção 4): agora tem cubo de orientação e os quatro modos segmentados. Falta o estado textual completo (Sem documento/Pronto/Pendente/Aplicando/Erro) e o cubo clicável por face (hoje gira por arraste; alinhamento por botões de vista).
 - [PARCIAL] Modelos (seção 9): são wireframe, não têm faces sombreadas nem oclusão por depth buffer. A spec aceita "faces levemente diferenciadas e contorno legível"; hoje só temos contorno.
 - [PARCIAL] Grade em camadas separadas (seção 12): hoje tudo vai numa única camada "Perspective Grid". A spec pede grupo com Modelo/Marcações/Guias separados.
 - [PARCIAL] Persistência (seção 16): usa localStorage no painel. A spec pede estado no lado UXP + por documento + UUID de instância.

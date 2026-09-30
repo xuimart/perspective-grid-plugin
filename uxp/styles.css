@@ -61,7 +61,23 @@ body {
 .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .row label { color: var(--muted); }
 .dd { width: 55%; max-width: 55%; flex: 0 0 auto; }
+.dd-full { width: 100%; }
 .row > label:first-child { flex: 1 1 auto; min-width: 0; }
+
+/* Interaction mode bar (segmented). */
+.mode-bar { display: flex; gap: 4px; padding: 8px 10px 0; }
+.mode-bar button {
+  flex: 1; padding: 6px 4px; font-size: 11px; background: #303030;
+  border: 1px solid var(--line); border-radius: 4px;
+}
+.mode-bar button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* XYZ position fields. */
+.xyz { display: flex; gap: 8px; }
+.xyz label { flex: 1; display: flex; align-items: center; gap: 4px; color: var(--muted); font-size: 11px; }
+.xyz input { width: 100%; background: #202020; color: var(--text); border: 1px solid #414141; border-radius: 4px; padding: 4px 6px; }
+.two-btn { display: flex; gap: 8px; }
+.two-btn button { flex: 1; }
 
 .slider { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
 .slider-head { display: flex; justify-content: space-between; font-size: 11px; gap: 8px; }
@@ -76,6 +92,12 @@ input[type=range] { width: 100%; }
 
 .view-buttons, .grid-presets { display: flex; gap: 6px; }
 .view-buttons button, .grid-presets button { flex: 1; padding: 6px 4px; font-size: 11px; }
+
+/* Orientation cube. */
+.cube-wrap { padding: 8px 10px 0; display: flex; flex-direction: column; gap: 6px; align-items: center; }
+.cube { width: 150px; height: 150px; display: block; cursor: grab; background: transparent; }
+.cube:active { cursor: grabbing; }
+.cube-views { width: 100%; }
 
 .color-field { display: flex; align-items: center; gap: 6px; }
 .swatch { width: 20px; height: 20px; border: 1px solid #54595c; border-radius: 4px; flex: 0 0 auto; }

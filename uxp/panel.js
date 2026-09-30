@@ -24,6 +24,9 @@
   let applyTimer = null;
   let busy = false;
   let applyQueued = false;
+  let interactionMode = 'orbit'; // orbit | pan | model | depth
+  let depthAxisSel = null;       // { axis, label } selected for depth moves
+  let previewLayout = { ox: 0, oy: 0, w: 1, h: 1 }; // image rect inside the <img>
 
   const preview = $('preview'); // <img> element
 
@@ -76,6 +79,12 @@
     const hc = $('horizonColor'); if (hc && document.activeElement !== hc) hc.value = state.horizonColor;
     const gsw = $('gridSwatch'); if (gsw) gsw.style.background = state.color;
     const hsw = $('horizonSwatch'); if (hsw) hsw.style.background = state.horizonColor;
+    // XYZ position fields (don't fight the user while typing).
+    const pos = state.modelPositions[state.referenceModel] || [0,0,0];
+    [['posX',0],['posY',1],['posZ',2]].forEach(([id, i]) => {
+      const el = $(id); if (el && document.activeElement !== el) el.value = Number(pos[i].toFixed(2));
+    });
+    if (typeof refreshDepthAxisOptions === 'function') refreshDepthAxisOptions();
   }
 
   /* ---------- live preview ---------- */
@@ -88,7 +97,7 @@
   function scheduleRender() {
     if (renderScheduled) return;
     renderScheduled = true;
-    requestAnimationFrame(() => { renderScheduled = false; drawPreview().catch(reportError); });
+    requestAnimationFrame(() => { renderScheduled = false; drawPreview().catch(reportError); drawCube().catch(() => {}); });
   }
 
   // Composite an RGBA grid buffer over an opaque white background (in place).
@@ -102,6 +111,46 @@
       rgba[i + 3] = 255;
     }
     return rgba;
+  }
+
+  // Draw the orientation cube (ortho gizmo) into the #cube <img>. Uses the same
+  // pure-JS rasterizer; edges of visible faces are drawn with their face color.
+  async function drawCube() {
+    const cubeEl = $('cube');
+    if (!cubeEl) return;
+    const size = 150;
+    const cam = G.camera(state, size, size, true); // gizmo = ortho indicator
+    const faces = G.cubeFaces(cam, 1);
+    const lines = [];
+    for (const face of faces) {
+      const p = face.points;
+      for (let i = 0; i < 4; i++) {
+        lines.push({ points: [p[i], p[(i + 1) % 4]], color: '#8aa0a8', opacity: 1, width: 2, dash: [] });
+      }
+    }
+    // Axis ticks (X/Z/Y) as short colored segments from the center.
+    const cx = size / 2, cy = size * 0.46, len = 26;
+    ['x','y','z'].forEach((axis, i) => {
+      const end = [cx + cam.right[i] * len, cy - cam.up[i] * len];
+      lines.push({ points: [[cx, cy], end], color: G.axisColors[axis], opacity: 1, width: 2.4, dash: [] });
+    });
+    const { data } = GridRaster.renderLines(lines, size, size);
+    // Composite over the panel background so the cube reads on dark UI.
+    for (let i = 0; i < data.length; i += 4) {
+      const a = data[i + 3] / 255;
+      const bg = 38;
+      data[i]   = Math.round(data[i]   * a + bg * (1 - a));
+      data[i+1] = Math.round(data[i+1] * a + bg * (1 - a));
+      data[i+2] = Math.round(data[i+2] * a + bg * (1 - a));
+      data[i+3] = 255;
+    }
+    if (PS && PS.available) {
+      try { const url = await PS.encodePreview(data, size, size); if (url) cubeEl.src = url; } catch (_) {}
+    } else {
+      const canvas = document.createElement('canvas'); canvas.width = size; canvas.height = size;
+      const ctx = canvas.getContext('2d'); const img = ctx.createImageData(size, size);
+      img.data.set(data); ctx.putImageData(img, 0, 0); cubeEl.src = canvas.toDataURL('image/png');
+    }
   }
 
   async function drawPreview() {
@@ -211,6 +260,27 @@
     }
   }
 
+  async function exportSvg() {
+    // The core already emits a scaled, transparent SVG of the grid + annotations.
+    const svg = G.svg(state);
+    try {
+      const storage = require('uxp').storage;
+      const fs = storage.localFileSystem;
+      const file = await fs.getFileForSaving('perspective-grid.svg', { types: ['svg'] });
+      if (!file) return;
+      await file.write(svg, { format: storage.formats.utf8 });
+      setStatus('SVG vetorial exportado.', 'ok');
+    } catch (err) {
+      const blob = new Blob([svg], { type: 'image/svg+xml' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'perspective-grid.svg';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10000);
+      setStatus('SVG vetorial exportado (download).', 'ok');
+    }
+  }
+
   /* ---------- document tracking ---------- */
 
   function refreshDoc(info) {
@@ -279,6 +349,68 @@
   $('horizonColor').addEventListener('input', e => { if (isHex(e.target.value)) change({ horizonColor: e.target.value }); });
   $('centerModelBtn').addEventListener('click', () => change({ modelPositions: { ...state.modelPositions, [state.referenceModel]: [0, 0, 0] } }));
 
+  // XYZ position fields for the active model.
+  ['posX','posY','posZ'].forEach((id, i) => {
+    $(id).addEventListener('change', e => {
+      const v = Number(e.target.value);
+      if (!Number.isFinite(v)) return;
+      const pos = [...(state.modelPositions[state.referenceModel] || [0,0,0])];
+      pos[i] = G.clamp(v, -100, 100);
+      change({ modelPositions: { ...state.modelPositions, [state.referenceModel]: pos } });
+    });
+  });
+
+  // Fit the model in frame: adjust distance/pan to frame the model's edges with
+  // ~10% margin, keeping lens, zoom, scale and world position. Pure JS (no Three).
+  $('fitModelBtn').addEventListener('click', () => {
+    if (!state.showCube) { setStatus('Ative "Mostrar modelo" para enquadrar.'); return; }
+    const w = 1600, h = Math.round(1600 / state.aspect);
+    // Sample the model's edge endpoints as framing points.
+    const segs = ReferenceModels.modelSegments(G, { ...state, panX: 0, panY: 0 }, w, h);
+    if (!segs.length) { setStatus('Modelo fora do quadro; gire ou reduza o tamanho.'); return; }
+    // Reconstruct 3D framing points from the model's boxes for a robust fit.
+    const pts = modelFramingPoints();
+    const distance = G.framingDistance(state, state, pts, 4);
+    change({ distance, panX: 0, panY: 0 });
+    setStatus('Modelo enquadrado.', 'ok');
+  });
+
+  // 3D framing points: corners of every box in the active model, scaled/placed.
+  function modelFramingPoints() {
+    const name = state.referenceModel, scale = state.boxSize || 1;
+    const pos = state.modelPositions[name] || [0,0,0];
+    const boxes = ReferenceModels.modelBoxes(name);
+    const pts = [];
+    for (const e of boxes) {
+      for (const v of [e.a, e.b]) pts.push([v[0]*scale+pos[0], v[1]*scale+pos[1], v[2]*scale+pos[2]]);
+    }
+    return pts;
+  }
+
+  // Populate the depth vanishing-point selector from the current model axes.
+  function refreshDepthAxisOptions() {
+    const dd = $('depthAxis');
+    const menu = dd.querySelector('sp-menu');
+    const axes = state.showCube ? G.modelAxes(state, docW(), docH()) : [];
+    menu.innerHTML = '<sp-menu-item value="">Selecione um ponto de fuga</sp-menu-item>' +
+      axes.map(a => `<sp-menu-item value="${a.axis}|${a.label}">${a.label} · ${a.axis.toUpperCase()}</sp-menu-item>`).join('');
+    // Keep current selection if still present.
+    if (depthAxisSel) {
+      const key = depthAxisSel.axis + '|' + depthAxisSel.label;
+      const idx = Array.from(menu.querySelectorAll('sp-menu-item')).findIndex(it => it.getAttribute('value') === key);
+      if (idx >= 0) { try { dd.selectedIndex = idx; } catch (_) {} } else depthAxisSel = null;
+    }
+  }
+  $('depthAxis').addEventListener('change', () => {
+    const v = ddValue($('depthAxis'));
+    if (!v) { depthAxisSel = null; return; }
+    const [axis, label] = v.split('|');
+    depthAxisSel = { axis, label };
+    interactionMode = 'depth';
+    document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b.dataset.mode === 'depth'));
+    setStatus(`Profundidade: ${label} · ${axis.toUpperCase()}. Arraste no preview.`);
+  });
+
   // Reset scene (camera + positions) preserving grid options and preset.
   $('resetBtn').addEventListener('click', () => {
     const p = {};
@@ -320,13 +452,34 @@
 
   $('applyBtn').addEventListener('click', () => applyToLayer().catch(reportError));
   $('exportBtn').addEventListener('click', () => exportPng().catch(reportError));
+  $('exportSvgBtn').addEventListener('click', () => exportSvg().catch(reportError));
 
   // Drag on the preview to orbit the grid (like the web prototype's cube/scene).
-  // Horizontal drag = yaw, vertical drag = pitch, via the shared G.orbit which
-  // respects the current perspective mode's constraints.
+  // The drag behavior depends on the active interaction mode:
+  //   orbit  -> G.orbit (yaw/pitch respecting the perspective mode)
+  //   pan    -> shift framing (panX/panY)
+  //   model  -> translate the model in the camera-parallel plane (G.moveModel)
+  //   depth  -> move the model along the selected vanishing-point axis
+  // Doc coordinates are derived by mapping the pointer into the previewed image
+  // rect (object-fit: contain), so model moves land where the pointer is.
+  const docW = () => (doc ? doc.width : 1600);
+  const docH = () => (doc ? doc.height : 1000);
+
+  function pointerToDoc(e) {
+    const rect = preview.getBoundingClientRect();
+    const aspect = doc ? doc.width / doc.height : state.aspect;
+    // Recompute the contained image rect inside the <img> element.
+    let w = rect.width, h = rect.width / aspect;
+    if (h > rect.height) { h = rect.height; w = rect.height * aspect; }
+    const ox = rect.left + (rect.width - w) / 2;
+    const oy = rect.top + (rect.height - h) / 2;
+    const nx = (e.clientX - ox) / w, ny = (e.clientY - oy) / h;
+    return [nx * docW(), ny * docH()];
+  }
+
   let previewDrag = null;
   preview.addEventListener('pointerdown', e => {
-    previewDrag = { id: e.pointerId, x: e.clientX, y: e.clientY };
+    previewDrag = { id: e.pointerId, x: e.clientX, y: e.clientY, start: state };
     try { preview.setPointerCapture(e.pointerId); } catch (_) {}
     e.preventDefault();
   });
@@ -335,8 +488,24 @@
     const dx = e.clientX - previewDrag.x, dy = e.clientY - previewDrag.y;
     previewDrag.x = e.clientX; previewDrag.y = e.clientY;
     if (dx === 0 && dy === 0) return;
-    const w = doc ? doc.width : 1600, h = doc ? doc.height : 1000;
-    change(G.orbit(state, dx, dy, w, h, 0.4));
+    const w = docW(), h = docH();
+
+    if (interactionMode === 'orbit') {
+      change(G.orbit(state, dx, dy, w, h, 0.4));
+    } else if (interactionMode === 'pan') {
+      change({ panX: state.panX + dx / w * 100, panY: state.panY + dy / h * 100 });
+    } else if (interactionMode === 'model') {
+      if (!state.showCube) { setStatus('Ative "Mostrar modelo" para movê-lo.'); return; }
+      // moveModel expects screen-space deltas in document pixels.
+      const next = G.moveModel(state, dx * w / (preview.clientWidth || w), dy * h / (preview.clientHeight || h), w, h);
+      change({ modelPositions: next.modelPositions });
+    } else if (interactionMode === 'depth') {
+      if (!state.showCube) { setStatus('Ative "Mostrar modelo" para mover em profundidade.'); return; }
+      if (!depthAxisSel) { setStatus('Escolha um ponto de fuga na aba Referência 3D.'); return; }
+      const target = pointerToDoc(e);
+      const next = G.moveModelOnAxis(state, depthAxisSel.axis, target, w, h, 0.2);
+      change({ modelPositions: next.modelPositions });
+    }
   });
   function endPreviewDrag(e) {
     if (!previewDrag || previewDrag.id !== e.pointerId) return;
@@ -346,6 +515,39 @@
   preview.addEventListener('pointerup', endPreviewDrag);
   preview.addEventListener('pointercancel', endPreviewDrag);
   preview.style.cursor = 'grab';
+
+  // Interaction mode segmented buttons.
+  document.querySelectorAll('[data-mode]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      interactionMode = btn.dataset.mode;
+      document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('active', b === btn));
+    });
+  });
+
+  // Orientation cube: dragging always orbits the camera (respects the mode).
+  const cubeEl = $('cube');
+  let cubeDrag = null;
+  if (cubeEl) {
+    cubeEl.addEventListener('pointerdown', e => {
+      cubeDrag = { id: e.pointerId, x: e.clientX, y: e.clientY };
+      try { cubeEl.setPointerCapture(e.pointerId); } catch (_) {}
+      e.preventDefault();
+    });
+    cubeEl.addEventListener('pointermove', e => {
+      if (!cubeDrag || cubeDrag.id !== e.pointerId) return;
+      const dx = e.clientX - cubeDrag.x, dy = e.clientY - cubeDrag.y;
+      cubeDrag.x = e.clientX; cubeDrag.y = e.clientY;
+      if (dx === 0 && dy === 0) return;
+      change(G.orbit(state, dx, dy, docW(), docH(), 0.6));
+    });
+    const endCube = e => {
+      if (!cubeDrag || cubeDrag.id !== e.pointerId) return;
+      try { cubeEl.releasePointerCapture(cubeDrag.id); } catch (_) {}
+      cubeDrag = null;
+    };
+    cubeEl.addEventListener('pointerup', endCube);
+    cubeEl.addEventListener('pointercancel', endCube);
+  }
 
   window.addEventListener('resize', scheduleRender);
 

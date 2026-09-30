@@ -10,6 +10,22 @@
       <img id="preview" class="preview" alt="Pré-visualização da grade">
       <div class="preview-hint" id="docInfo">Nenhum documento aberto</div>
     </div>
+    <div class="mode-bar" role="group" aria-label="Modo de interação no preview">
+      <button type="button" data-mode="orbit" class="active">Girar</button>
+      <button type="button" data-mode="pan">Enquadrar</button>
+      <button type="button" data-mode="model">Modelo</button>
+      <button type="button" data-mode="depth">Profundidade</button>
+    </div>
+
+    <div class="cube-wrap">
+      <img id="cube" class="cube" alt="Cubo de orientação. Arraste para girar.">
+      <div class="view-buttons cube-views">
+        <button type="button" data-view="front">Frente</button>
+        <button type="button" data-view="right">Lado</button>
+        <button type="button" data-view="top">Topo</button>
+        <button type="button" data-view="iso">¾</button>
+      </div>
+    </div>
 
     <div class="scroll">
       <!-- CÂMERA -->
@@ -49,12 +65,6 @@
             <div class="slider" data-key="panX"><div class="slider-head"><label>Enq. horizontal</label><span class="val"></span></div><input type="range" min="-100" max="100" step="1"></div>
             <div class="slider" data-key="panY"><div class="slider-head"><label>Enq. vertical</label><span class="val"></span></div><input type="range" min="-100" max="100" step="1"></div>
           </div>
-          <div class="view-buttons">
-            <button type="button" data-view="front">Frente</button>
-            <button type="button" data-view="right">Lado</button>
-            <button type="button" data-view="top">Topo</button>
-            <button type="button" data-view="iso">¾</button>
-          </div>
           <button id="resetBtn" class="secondary full" type="button">↺ Restaurar cena</button>
         </div>
       </section>
@@ -72,7 +82,20 @@
             </sp-menu></sp-dropdown>
           </div>
           <div class="slider" data-key="boxSize"><div class="slider-head"><label>Tamanho</label><span class="val"></span></div><input type="range" min="0.5" max="2.5" step="0.1"></div>
-          <button id="centerModelBtn" class="secondary full" type="button">↺ Centralizar modelo</button>
+          <div class="subheading">Posição (unidades)</div>
+          <div class="xyz">
+            <label>X <input type="number" id="posX" step="0.5" min="-100" max="100"></label>
+            <label>Y <input type="number" id="posY" step="0.5" min="-100" max="100"></label>
+            <label>Z <input type="number" id="posZ" step="0.5" min="-100" max="100"></label>
+          </div>
+          <div class="two-btn">
+            <button id="centerModelBtn" class="secondary" type="button">↺ Centralizar</button>
+            <button id="fitModelBtn" class="secondary" type="button">Enquadrar</button>
+          </div>
+          <div class="subheading">Profundidade — eixo/PF</div>
+          <sp-dropdown id="depthAxis" class="dd-full"><sp-menu slot="options">
+            <sp-menu-item value="">Selecione um ponto de fuga</sp-menu-item>
+          </sp-menu></sp-dropdown>
         </div>
       </section>
 
@@ -119,7 +142,8 @@
     <div class="actions">
       <button id="applyBtn" class="primary full" disabled>Aplicar grade na camada</button>
       <div class="action-row">
-        <button id="exportBtn" class="secondary">Exportar PNG</button>
+        <button id="exportBtn" class="secondary">PNG</button>
+        <button id="exportSvgBtn" class="secondary">SVG</button>
         <label class="live"><input type="checkbox" id="liveApply"> Atualizar ao mover</label>
       </div>
       <div class="status" id="status">Abra um documento no Photoshop para começar.</div>
