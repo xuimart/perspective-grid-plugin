@@ -1,7 +1,7 @@
 {
   "id": "com.xuimart.perspectivegrid",
   "name": "Perspective Grid",
-  "version": "0.8.9",
+  "version": "0.9.0",
   "main": "index.html",
   "manifestVersion": 6,
   "host": {
@@ -30,7 +30,9 @@
   ],
   "requiredPermissions": {
     "localFileSystem": "plugin",
-    "allowCodeGenerationFromStrings": true
+    "allowCodeGenerationFromStrings": true,
+    "network": { "domains": ["https://raw.githubusercontent.com"] },
+    "launchProcess": { "schemes": ["https"] }
   },
   "icons": [
     {

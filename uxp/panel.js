@@ -732,4 +732,17 @@
     setStatus('Prévia local. Aplicar e atualizar exigem Photoshop.');
     drawPreview();
   }
+
+  /* ---------- aviso de atualização (padrão Xuimart) ---------- */
+
+  const UPD = (typeof window !== 'undefined' ? window : globalThis).PGUpdate;
+  if (UPD) {
+    const installed = UPD.localVersion();
+    $('versionLabel').textContent = installed ? 'Perspective Grid v' + installed : 'Perspective Grid (dev)';
+    // O aviso ocupa espaço no topo: recalcula o preview quando ele entra ou sai.
+    const updateOptions = manual => ({ manual, onStatus: setStatus, onLayout: () => { fitPreviewBox(); drawPreview(); } });
+    $('checkUpdateBtn').addEventListener('click', () => { UPD.check(updateOptions(true)); });
+    // Check automático alguns segundos depois de abrir, para nunca atrasar o carregamento.
+    setTimeout(() => { UPD.check(updateOptions(false)); }, 4000);
+  }
 })();

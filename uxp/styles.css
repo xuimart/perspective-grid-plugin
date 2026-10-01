@@ -183,5 +183,17 @@ sp-checkbox { font-size:11px; flex:0 0 auto; margin-right:10px; min-height:24px;
 button { border-radius:4px; }
 button.full { margin-top:10px; }
 .status { font-size:10px; line-height:14px; max-height:28px; overflow-y:auto; margin-top:8px; }
+/* Aviso de atualizacao (topo) e rodape com versao + verificacao manual.
+   Margens em vez de gap: o layout aprovado evita gap no UXP. */
+.update-banner { flex:0 0 auto; display:flex; align-items:center; padding:8px 10px; background:#3a1f25; border-bottom:1px solid var(--accent); }
+.update-text { flex:1 1 auto; min-width:0; display:flex; flex-direction:column; font-size:11px; }
+.update-text span { margin-top:2px; font-size:10px; color:var(--muted); }
+.update-banner button.primary { flex:0 0 auto; margin-left:8px; padding:4px 10px; font-size:11px; }
+.update-close { flex:0 0 auto; margin-left:4px; padding:0 4px; background:transparent; border:0; font-size:16px; line-height:16px; color:var(--muted); }
+.update-close:hover { background:transparent; color:var(--text); }
+.about-row { display:flex; align-items:center; justify-content:space-between; margin-top:6px; font-size:10px; line-height:14px; color:var(--muted); }
+.link-btn { padding:0; background:transparent; border:0; font-size:10px; line-height:14px; color:var(--muted); text-decoration:underline; }
+.link-btn:hover { background:transparent; color:var(--text); }
+
 @media (max-height:520px) { .top { padding-top:5px; } .tabs { padding-top:3px; flex-basis:38px; margin-bottom:3px; } .tabs button { height:35px; } .actions { padding:8px 12px; } .apply-row button { height:31px; } }
 @media (min-width:500px) { .row > label:first-child { flex-basis:150px; font-size:13px; } .angle-row input { width:60px; } .angle-row label { font-size:11px; } .ortho-angles > .row { flex-basis:145px; } .ortho-angles .dd { width:145px; } .tabs button { font-size:14px; } .apply-row button { height:43px; font-size:13px; } }
