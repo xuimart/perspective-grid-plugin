@@ -1,0 +1,26 @@
+/* Versao CEP (Photoshop CC 2018+): estilo dos controles HTML que substituem os
+   widgets Spectrum do UXP (ver js/sp-shim.js). Carregado depois de styles.css. */
+html, body { margin: 0; height: 100%; overflow: hidden; }
+
+sp-slider, sp-dropdown, sp-checkbox { display: block; }
+sp-slider > sp-label, sp-dropdown > sp-menu { display: none; }
+
+sp-slider { min-height: 44px; }
+.sps-head { display: flex; justify-content: space-between; font-size: 11px; line-height: 16px; color: var(--muted); }
+.sps-value { color: var(--text); }
+sp-slider input[type=range] { -webkit-appearance: none; display: block; width: 100%; height: 20px; margin: 4px 0 0; padding: 0; background: transparent; }
+sp-slider input[type=range]:focus { outline: none; }
+sp-slider input[type=range]::-webkit-slider-runnable-track { height: 2px; background: #555b5c; border-radius: 1px; }
+sp-slider input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; margin-top: -6px; border-radius: 50%; background: #202425; border: 2px solid #a8adae; }
+sp-slider input[type=range]:focus::-webkit-slider-thumb { border-color: var(--accent); }
+sp-slider input[type=range]:disabled { opacity: .4; }
+
+sp-dropdown select { width: 100%; height: 100%; min-height: 28px; padding: 0 6px; font: inherit; font-size: 11px; color: var(--text); background: #1b1e20; border: 1px solid var(--line); border-radius: 4px; }
+sp-dropdown select:disabled { opacity: .4; }
+
+sp-checkbox .spc { display: flex; align-items: center; min-height: 24px; cursor: pointer; }
+sp-checkbox input { margin: 0 6px 0 0; }
+.count-row sp-checkbox input { margin: 0; }
+
+/* O aviso de atualizacao ainda nao existe nesta versao. */
+#checkUpdateBtn { display: none; }

@@ -1,0 +1,39 @@
+Perspective Grid - versão de teste para Photoshop CC 2018 ou mais novo
+
+Esta é uma versão de teste. Ela usa o mesmo código do plugin principal, mas
+no formato antigo de painéis da Adobe (CEP), que funciona desde o Photoshop CC 2018.
+
+INSTALAÇÃO (Windows)
+1. Extraia o ZIP inteiro numa pasta.
+2. Dê duplo-clique em Instalar.cmd.
+3. Feche o Photoshop por completo e abra de novo.
+4. Abra o painel em Janela > Extensões > Perspective Grid.
+   No Photoshop 2022 ou mais novo o menu se chama "Extensões (legado)".
+
+O instalador copia o plugin para a sua pasta de usuário e liga o
+PlayerDebugMode, a configuração que o Photoshop exige para carregar painéis
+que não são assinados pela Adobe. Não precisa de administrador.
+
+COMO USAR
+- Arraste no preview para girar a câmera. Botão direito reposiciona, a roda
+  do mouse dá zoom.
+- "Aplicar na camada" cria a camada "Perspective Grid" no documento.
+- "Atualizar malha" redesenha a mesma camada depois de mudar a câmera.
+
+O QUE CONFERIR NO TESTE
+- O painel abre e o preview mostra a grade.
+- "Aplicar na camada" cria a camada no tamanho exato do documento.
+- Mudar a câmera e clicar em "Atualizar malha" substitui a grade anterior,
+  sem deixar duas camadas.
+
+Se algo der errado, mande um print do painel com a mensagem que aparece
+embaixo dos botões.
+
+DIFERENÇAS DESTA VERSÃO
+- O aviso de atualização ainda não funciona aqui.
+- Em documentos grandes, aplicar a grade pode levar alguns segundos.
+- Instalador só para Windows.
+
+PARA REMOVER
+Dê duplo-clique em Desinstalar.cmd. O PlayerDebugMode continua ligado porque
+outros painéis podem precisar dele.

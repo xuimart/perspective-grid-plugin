@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Manifesto CEP do Perspective Grid. Gerado pelo build-cep.cjs: {{VERSION}} vem
+  do uxp/manifest.json. Mesma estrutura do LightRef e do DrawlapsePS:
+   * Photoshop 19.0 (CC 2018) em diante, runtime CSXS 8.0
+   * PHXS + PHSP cobrem as duas variantes de host do Photoshop
+   * enable-nodejs e mixed-context: o painel grava o PNG da grade com o Node
+-->
+<ExtensionManifest Version="6.0"
+    ExtensionBundleId="com.xuimart.perspectivegrid.cep"
+    ExtensionBundleVersion="{{VERSION}}"
+    ExtensionBundleName="Perspective Grid">
+  <ExtensionList>
+    <Extension Id="com.xuimart.perspectivegrid.cep.panel" Version="{{VERSION}}" />
+  </ExtensionList>
+  <ExecutionEnvironment>
+    <HostList>
+      <Host Name="PHXS" Version="[19.0,99.9]" />
+      <Host Name="PHSP" Version="[19.0,99.9]" />
+    </HostList>
+    <LocaleList><Locale Code="All" /></LocaleList>
+    <RequiredRuntimeList>
+      <RequiredRuntime Name="CSXS" Version="8.0" />
+    </RequiredRuntimeList>
+  </ExecutionEnvironment>
+  <DispatchInfoList>
+    <Extension Id="com.xuimart.perspectivegrid.cep.panel">
+      <DispatchInfo>
+        <Resources>
+          <MainPath>./index.html</MainPath>
+          <ScriptPath>./jsx/host.jsx</ScriptPath>
+          <CEFCommandLine>
+            <Parameter>--enable-nodejs</Parameter>
+            <Parameter>--mixed-context</Parameter>
+          </CEFCommandLine>
+        </Resources>
+        <Lifecycle><AutoVisible>true</AutoVisible></Lifecycle>
+        <UI>
+          <Type>Panel</Type>
+          <Menu>Perspective Grid</Menu>
+          <Geometry>
+            <Size><Height>640</Height><Width>340</Width></Size>
+            <MinSize><Height>420</Height><Width>320</Width></MinSize>
+            <MaxSize><Height>1600</Height><Width>900</Width></MaxSize>
+          </Geometry>
+          <Icons>
+            <Icon Type="Normal">./icons/icon.png</Icon>
+            <Icon Type="RollOver">./icons/icon.png</Icon>
+            <Icon Type="DarkNormal">./icons/icon.png</Icon>
+            <Icon Type="DarkRollOver">./icons/icon.png</Icon>
+          </Icons>
+        </UI>
+      </DispatchInfo>
+    </Extension>
+  </DispatchInfoList>
+</ExtensionManifest>

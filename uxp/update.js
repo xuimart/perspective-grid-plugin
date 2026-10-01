@@ -14,7 +14,10 @@
 
   // Hospedado no próprio repositório (opção "GitHub raw" do guia). O domínio
   // precisa constar em requiredPermissions.network.domains no manifest.
-  const UPDATE_CHECK_URL = 'https://raw.githubusercontent.com/xuimart/perspective-grid-plugin/master/version.json';
+  // A versão CEP define PG_UPDATE_URL antes deste arquivo; null desliga o aviso
+  // (o version.json do UXP aponta para o .ccx, que não serve no Photoshop 2020).
+  const UPDATE_CHECK_URL = root.PG_UPDATE_URL !== undefined ? root.PG_UPDATE_URL
+    : 'https://raw.githubusercontent.com/xuimart/perspective-grid-plugin/master/version.json';
   const TIMEOUT_MS = 8000;
 
   function uxpModule() {
@@ -22,10 +25,12 @@
   }
 
   // Versão instalada = a do manifest. Fonte única: não existe uma constante
-  // separada para esquecer de atualizar. Fora do Photoshop retorna null.
+  // separada para esquecer de atualizar. Na versão CEP vem de PG_VERSION, que o
+  // build-cep.cjs gera a partir do mesmo manifest. Fora do Photoshop: null.
   function localVersion() {
     const u = uxpModule();
-    return u && u.versions && u.versions.plugin ? String(u.versions.plugin) : null;
+    if (u && u.versions && u.versions.plugin) return String(u.versions.plugin);
+    return root.PG_VERSION ? String(root.PG_VERSION) : null;
   }
 
   // SemVer numérico por segmento; sufixos como "-beta" são ignorados.
@@ -66,6 +71,10 @@
     if (u && u.shell && u.shell.openExternal) {
       // O Photoshop pede confirmação ao usuário; este texto aparece no diálogo.
       return u.shell.openExternal(url, 'Abrir no navegador o download da nova versão do Perspective Grid.');
+    }
+    if (root.cep && root.cep.util && root.cep.util.openURLInDefaultBrowser) {
+      root.cep.util.openURLInDefaultBrowser(url);
+      return Promise.resolve('');
     }
     try { window.open(url); } catch (_) {}
     return Promise.resolve('');
@@ -118,6 +127,7 @@
   // opts: { manual, onStatus(msg, kind), onLayout() }. No modo automático não
   // escreve nada na barra de status: só aparece algo se houver versão nova.
   async function check(opts) {
+    if (!UPDATE_CHECK_URL) return null; // aviso desligado nesta versão
     const o = opts || {};
     const say = o.manual && o.onStatus ? o.onStatus : () => {};
     const current = localVersion();
