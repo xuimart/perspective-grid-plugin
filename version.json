@@ -1,5 +1,5 @@
 {
-    "version":  "0.10.4",
+    "version":  "0.10.5",
     "downloadUrl":  "https://github.com/xuimart/perspective-grid-plugin/releases/latest/download/PerspectiveGrid.ccx",
     "changelog":  "Olho de peixe em tela cheia, Shift + roda muda a lente (mm), Shift + Alt move o modelo e botão para ampliar o preview."
 }
