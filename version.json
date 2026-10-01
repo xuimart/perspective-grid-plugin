@@ -1,5 +1,5 @@
 {
-    "version":  "0.9.0",
+    "version":  "0.10.4",
     "downloadUrl":  "https://github.com/xuimart/perspective-grid-plugin/releases/latest/download/PerspectiveGrid.ccx",
-    "changelog":  "Aviso de atualização no painel, modelo Personagem e zoom que não mexe na lente."
+    "changelog":  "Olho de peixe em tela cheia, Shift + roda muda a lente (mm), Shift + Alt move o modelo e botão para ampliar o preview."
 }
