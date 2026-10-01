@@ -20,6 +20,20 @@
   const LAYER_NAME = 'Perspective Grid';
   const POLL_MS = 1000;
 
+  // Sem isto o Photoshop engole os atalhos de teclado antes do painel.
+  // Shift + Alt + Z (keyCode 90 no Windows, 6 no Mac) = recentralizar o modelo.
+  if (host && typeof host.registerKeyEventsInterest === 'function') {
+    try {
+      host.registerKeyEventsInterest(JSON.stringify([
+        { keyCode: 90, shiftKey: true, altKey: true },
+        { keyCode: 6, shiftKey: true, altKey: true },
+        // Esc (27 no Windows, 53 no Mac) = sair do preview ampliado.
+        { keyCode: 27 },
+        { keyCode: 53 }
+      ]));
+    } catch (_) {}
+  }
+
   function evalScript(code) {
     return new Promise(resolve => host.evalScript(code, result => resolve(result)));
   }

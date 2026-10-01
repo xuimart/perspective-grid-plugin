@@ -157,7 +157,7 @@ test('locked perspective modes retain exactly their vanishing-point count throug
 
 test('scene zoom never acts as a lens: perspective zoom dollies and keeps the vanishing points',()=>{
   const cube=[];for(const x of [-1.5,1.5])for(const y of [-1.5,1.5])for(const z of [-1.5,1.5])cube.push([x,y,z]);
-  for(const preset of ['free','one','two','three','five']){
+  for(const preset of ['free','one','two','three']){
     const s=G.normalize({preset,focalLength:35,viewZoom:100,yaw:31,pitch:17});
     const zoomed=G.normalize({...s,viewZoom:250});
     const a=G.camera(s,1600,1000),b=G.camera(zoomed,1600,1000);
@@ -167,17 +167,20 @@ test('scene zoom never acts as a lens: perspective zoom dollies and keeps the va
     const va=G.vanishingPoints(a),vb=G.vanishingPoints(b);
     assert.equal(vb.length,va.length);
     va.forEach((v,i)=>assert.ok(Math.hypot(v.x-vb[i].x,v.y-vb[i].y)<1e-6,`${preset}: PF ${i+1}`));
-    if(preset!=='five')assert.deepEqual(G.projectedLines({...zoomed,gridStyle:'rays'},1600,1000),G.projectedLines({...s,gridStyle:'rays'},1600,1000));
+    assert.deepEqual(G.projectedLines({...zoomed,gridStyle:'rays'},1600,1000),G.projectedLines({...s,gridStyle:'rays'},1600,1000));
     assert.ok(G.framingSize(zoomed,cube)>G.framingSize(s,cube)*1.5,`${preset}: model comes closer`);
     assert.deepEqual(G.camera(s,300,180,true),G.camera(zoomed,300,180,true));
     assert.equal(G.normalize({...zoomed,focalLength:85,distortion:40}).viewZoom,250);
   }
-  // Orthographic has no lens: zoom stays a uniform magnification about the center.
-  const o=G.normalize({preset:'ortho',viewZoom:100}),oz=G.normalize({...o,viewZoom:250});
-  const a=G.camera(o,1600,1000),b=G.camera(oz,1600,1000);
-  assert.equal(b.distance,a.distance);
-  const p=G.project([1,.5,0],a),q=G.project([1,.5,0],b);
-  assert.ok(Math.abs((q[0]-b.cx)/(p[0]-a.cx)-2.5)<1e-8);
+  // Orthographic has no lens and fisheye guides are directions only: there the
+  // zoom is a uniform magnification about the center, with the lens untouched.
+  for(const preset of ['ortho','five']){
+    const o=G.normalize({preset,focalLength:12,viewZoom:100}),oz=G.normalize({...o,viewZoom:250});
+    const a=G.camera(o,1600,1000),b=G.camera(oz,1600,1000);
+    assert.equal(b.distance,a.distance);assert.equal(oz.focalLength,o.focalLength);
+    const p=G.project([1,.5,0],a),q=G.project([1,.5,0],b);
+    assert.ok(Math.abs((q[0]-b.cx)/(p[0]-a.cx)-2.5)<1e-8,`${preset}: magnifies`);
+  }
 });
 
 test('lens changes preserve model framing by dollying, without changing zoom or mode',()=>{
@@ -454,13 +457,35 @@ test('five-point fisheye has a center and four curved-family endpoints under eve
   }
   const s=G.normalize({preset:'five',focalLength:10});
   assert.notDeepEqual(G.projectedLines(s,1600,1000)[0].points,G.projectedLines({...s,distortion:0},1600,1000)[0].points);
-  const svg=G.svg(s);for(let i=1;i<=5;i++)assert.match(svg,new RegExp('>'+i+'PF<'));
+  const svg=G.svg(s);for(let i=1;i<=5;i++)assert.match(svg,new RegExp('>'+i+'PF( fora)?<'));
+  assert.match(svg,/>1PF</); // o centro sempre fica dentro do quadro
+});
+
+test('fisheye is full-frame: the 180-degree circle always covers the whole frame',()=>{
+  const covers=(s,w,h)=>{
+    const cam=G.camera(s,w,h),z=cam.zoom,cx=w/2+(cam.cx-w/2)*z,cy=h/2+(cam.cy-h/2)*z;
+    return [[0,0],[w,0],[0,h],[w,h]].every(([x,y])=>Math.hypot(x-cx,y-cy)<=cam.focal*z+1e-6);
+  };
+  for(const [w,h] of [[1600,1000],[1000,1600],[3840,2160],[345,216]])
+    for(const focalLength of [10,24,85])for(const viewZoom of [25,100,300])for(const [panX,panY] of [[0,0],[12,-8]]){
+      const s=G.normalize({preset:'five',focalLength,viewZoom,panX,panY});
+      assert.ok(covers(s,w,h),`${w}x${h} ${focalLength}mm ${viewZoom}% pan ${panX},${panY}`);
+    }
+  // 10 mm encosta o círculo no canto; mm maiores ampliam; o zoom para trás para no limite.
+  const a=G.camera(G.normalize({preset:'five',focalLength:10}),1600,1000),b=G.camera(G.normalize({preset:'five',focalLength:20}),1600,1000);
+  assert.ok(Math.abs(a.focal*a.zoom-Math.hypot(800,500))<1e-6);
+  assert.ok(Math.abs(b.focal*b.zoom/(a.focal*a.zoom)-2)<1e-9);
+  assert.equal(G.camera(G.normalize({preset:'five',focalLength:20,viewZoom:25}),1600,1000).zoom,.5);
 });
 
 test('fisheye labels remain inside small viewports and do not falsely report interior points as outside',()=>{
   const s=G.normalize({preset:'five',focalLength:10}),labels=G.annotations(s,345,345/1.6,1).filter(m=>m.type==='label');
   assert.equal(labels.filter(m=>/PF/.test(m.text)).length,5);
-  assert.ok(labels.every(m=>!m.text.includes('fora')));
+  // Full-frame: só os pontos de fuga que estão de fato fora do quadro dizem "fora".
+  const cam=G.camera(s,345,345/1.6),vps=G.vanishingPoints(cam);
+  const outside=vps.filter(v=>v.x<0||v.x>345||v.y<0||v.y>345/1.6).length;
+  assert.equal(labels.filter(m=>m.text.includes('fora')).length,outside);
+  assert.ok(outside<5);
   const boxes=labels.map(m=>({left:m.align==='right'?m.x-m.text.length*6:m.x,right:m.align==='right'?m.x:m.x+m.text.length*6,top:m.y-11,bottom:m.y+3}));
   for(let i=0;i<boxes.length;i++)for(let j=i+1;j<boxes.length;j++){
     const a=boxes[i],b=boxes[j];assert.ok(!(a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top));

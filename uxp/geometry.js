@@ -89,31 +89,57 @@
     const forward = [-sy * cp, -sp, -cy * cp];
     // Scene zoom must never act like a lens change. Magnifying the image inside
     // the fixed document frame is optically identical to a longer focal length,
-    // so in perspective/fisheye the zoom DOLLIES the camera toward the pivot:
-    // the focal and the vanishing points stay fixed, only the scene comes
-    // closer. Orthographic has no lens, so there zoom stays a magnification.
+    // so in perspective the zoom DOLLIES the camera toward the pivot: the focal
+    // and the vanishing points stay fixed, only the scene comes closer.
+    // Orthographic has no lens and the fisheye guides are directions only (a
+    // dolly would leave the circle untouched), so there zoom is a magnification.
     const zoom = gizmo ? 1 : state.viewZoom / 100;
-    const dolly = !gizmo && state.projection !== 'ortho';
+    const dolly = !gizmo && state.projection === 'perspective';
     const distance = gizmo ? 16 : (dolly ? state.distance / zoom : state.distance);
+    const ox = width * (.5 + (gizmo ? 0 : state.panX / 100));
+    const oy = height * ((gizmo ? .46 : .5) + (gizmo ? 0 : state.panY / 100));
+    let focal = width * state.focalLength / 36, magnify = dolly ? 1 : zoom;
+    if (!gizmo && state.projection === 'fisheye') {
+      // Olho de peixe "full frame": a câmera fica dentro da cena e a borda da
+      // esfera nunca aparece. Em 10 mm (o mínimo) o círculo de 180° alcança
+      // exatamente o canto mais distante do quadro; mm maiores ampliam a partir
+      // daí, e o zoom para trás para no ponto em que o círculo ainda cobre tudo.
+      const reach = Math.max(...[[0, 0], [width, 0], [0, height], [width, height]].map(k => Math.hypot(k[0] - ox, k[1] - oy)));
+      focal = reach * state.focalLength / 10;
+      magnify = Math.max(magnify, fisheyeCoverZoom(width, height, ox, oy, focal));
+    }
     return {
       width, height, right, up, forward, distance,
       eye: forward.map(v => -v * distance),
-      cx: width * (.5 + (gizmo ? 0 : state.panX / 100)),
-      cy: height * ((gizmo ? .46 : .5) + (gizmo ? 0 : state.panY / 100)),
-      focal: width * state.focalLength / 36,
+      cx: ox,
+      cy: oy,
+      focal,
       scale: gizmo ? Math.min(width, height) * .265 : Math.min(width, height) / state.distance,
-      zoom: dolly ? 1 : zoom,
+      zoom: magnify,
       ortho: gizmo || state.projection === 'ortho', fisheye: !gizmo && state.projection==='fisheye',
       distortion: state.distortion/100, near: .12
     };
+  }
+  // Menor ampliação (em torno do centro do quadro) com que o círculo de 180° do
+  // olho de peixe, de centro (cx, cy) e raio focal, ainda cobre os 4 cantos.
+  // Para cada canto a: |a - d·z| <= focal·z, com d = deslocamento do centro.
+  function fisheyeCoverZoom(width, height, cx, cy, focal) {
+    const dx = cx - width / 2, dy = cy - height / 2, dd = dx * dx + dy * dy, ff = focal * focal;
+    if (dd >= ff) return 1; // pan tão grande que nenhuma ampliação resolve
+    let z = 0;
+    for (const [kx, ky] of [[0, 0], [width, 0], [0, height], [width, height]]) {
+      const ax = kx - width / 2, ay = ky - height / 2, ad = ax * dx + ay * dy, aa = ax * ax + ay * ay;
+      z = Math.max(z, (-ad + Math.sqrt(ad * ad + (ff - dd) * aa)) / (ff - dd));
+    }
+    return z;
   }
   function cameraPoint(p, cam) {
     const relative=p.map((v,i)=>v-cam.eye[i]);
     return [dot(relative, cam.right), dot(relative, cam.up), dot(relative, cam.forward)];
   }
   function fromCamera(p, cam) {
-    // cam.zoom is only != 1 in orthographic mode (uniform magnification about
-    // the frame center). Perspective zoom is a dolly, handled in camera().
+    // cam.zoom is only != 1 in orthographic and fisheye (uniform magnification
+    // about the frame center). Perspective zoom is a dolly, handled in camera().
     if(cam.fisheye){
       const length=Math.hypot(p[0],p[1]);
       if(length<1e-12)return zoomPoint([cam.cx,cam.cy],cam);
@@ -125,7 +151,7 @@
     const scale = cam.ortho ? cam.scale : cam.focal / p[2];
     return zoomPoint([cam.cx + p[0] * scale, cam.cy - p[1] * scale],cam);
   }
-  // Uniform magnification about the frame center (orthographic zoom only).
+  // Uniform magnification about the frame center (orthographic and fisheye zoom).
   function zoomPoint(pt, cam) {
     const z = cam.zoom == null ? 1 : cam.zoom;
     if (z === 1 || !pt) return pt;
@@ -276,7 +302,7 @@
     const cam=camera(after,1600,1600/after.aspect);
     // Keep the complete model ahead of the near plane during the dolly adjustment.
     // The camera sits at distance / zoom in perspective, so scale the bound back.
-    const n=normalize(after),dollyZoom=n.projection==='ortho'?1:n.viewZoom/100;
+    const n=normalize(after),dollyZoom=n.projection==='perspective'?n.viewZoom/100:1;
     let lo=Math.max(bounds.distance[0],minimumDistance,...points.map(p=>(cam.near-dot(p,cam.forward)+.001)*dollyZoom));
     let hi=bounds.distance[1];lo=Math.min(lo,hi);
     for(let i=0;i<32;i++){

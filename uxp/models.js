@@ -162,6 +162,21 @@
     return [Math.round(r*f), Math.round(g*f), Math.round(b*f)];
   }
 
+  const FISHEYE_STEPS = 16; // pontos por aresta na olho de peixe
+
+  // Pontos ao longo do contorno de uma face (polígono fechado), steps por aresta.
+  function sampleEdges(corners, steps) {
+    const out = [];
+    for (let e = 0; e < corners.length; e++) {
+      const a = corners[e], b = corners[(e + 1) % corners.length];
+      for (let s = 0; s < steps; s++) {
+        const t = s / steps;
+        out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]);
+      }
+    }
+    return out;
+  }
+
   // Return filled faces (projected polygons + shaded color + depth) for the
   // active model, sorted back-to-front (painter's algorithm) for occlusion.
   function modelFaces(G, state, width, height) {
@@ -176,7 +191,10 @@
       const corners = boxCorners(piece.size, piece.pos).map(c => [c[0]*scale+pos[0], c[1]*scale+pos[1], c[2]*scale+pos[2]]);
       for (const f of faceDefs) {
         const world = f.ids.map(i => corners[i]);
-        const proj = world.map(p => G.project(p, cam));
+        // Na olho de peixe uma aresta reta vira curva (como as guias), então
+        // cada aresta é amostrada; nas outras projeções 4 cantos bastam.
+        const outline = cam.fisheye ? sampleEdges(world, FISHEYE_STEPS) : world;
+        const proj = outline.map(p => G.project(p, cam));
         if (proj.some(p => !p)) continue; // face crosses the camera; skip
         // Use the farthest corner's depth for painter ordering — more robust
         // than the average when boxes are close or interpenetrate.

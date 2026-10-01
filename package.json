@@ -1,6 +1,6 @@
 {
   "name": "perspective-grid-prototype",
-  "version": "0.10.0",
+  "version": "0.10.4",
   "private": true,
   "scripts": {
     "build": "node build.cjs",

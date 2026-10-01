@@ -100,9 +100,25 @@
 
   // Height = (panel width / document aspect) * scale. This makes the image box
   // match the document proportions exactly, so there are no white borders.
+  // Preview ampliado (botão no canto do preview): a cena ocupa o painel inteiro,
+  // mantendo a proporção do documento. Bom para demonstrações.
+  let previewMax = false;
   function fitPreviewBox() {
-    const availW = preview.clientWidth || 320;
     const aspect = doc ? doc.width / doc.height : state.aspect;
+    if (previewMax) {
+      const top = preview.parentElement;
+      const pad = 16; // .preview-max .top usa 8px de padding em cada lado
+      const availW = Math.max(60, (top.clientWidth || 320) - pad);
+      const availH = Math.max(60, (document.querySelector('.panel').clientHeight || 640) - pad);
+      const w = Math.min(availW, availH * aspect), h = w / aspect;
+      preview.style.width = Math.round(w) + 'px';
+      preview.style.height = Math.round(h) + 'px';
+      preview.style.marginTop = Math.max(0, Math.round((availH - h) / 2)) + 'px';
+      return;
+    }
+    preview.style.width = '';
+    preview.style.marginTop = '';
+    const availW = preview.clientWidth || 320;
     // Leave room for controls even with portrait documents and short panels.
     const panelHeight = document.querySelector('.panel').clientHeight || 640;
     const limit = Math.max(90, Math.min(360, panelHeight * 0.4, panelHeight - 270));
@@ -542,7 +558,10 @@
         right:     [90, 0],
         top:       [0, 89]
       }[v] || [45, 35.264];
-      change({ yaw: p[0], pitch: p[1] });
+      // Isométrica, dimétrica e trimétrica só existem na projeção ortográfica:
+      // escolher uma delas já troca a perspectiva para Ortográfica.
+      const axonometric = v === 'iso' || v === 'dimetric' || v === 'trimetric';
+      change(axonometric ? { ...presetValues.ortho, preset: 'ortho', yaw: p[0], pitch: p[1] } : { yaw: p[0], pitch: p[1] });
     });
     wireBtn('centerModelBtn', () => change({ modelPositions: { ...state.modelPositions, [state.referenceModel]: [0,0,0] } }));
     wireBtn('modelAdvancedBtn', () => {
@@ -619,7 +638,10 @@
   let drag = null;
   preview.addEventListener('pointerdown', e => {
     const pan = (e.button === 2 || e.button === 1);
-    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, pan };
+    // Shift + Alt + arrastar = mover o modelo livremente no plano da tela.
+    const model = !pan && e.shiftKey && e.altKey;
+    drag = { id: e.pointerId, x: e.clientX, y: e.clientY, pan, model };
+    if (model) setStatus(state.showCube ? 'Movendo o modelo. Shift + Alt + Z volta ao centro.' : 'Ative o modelo na aba Modelo para movê-lo.');
     interacting = true;
     try { preview.setPointerCapture(e.pointerId); } catch (_) {}
     e.preventDefault();
@@ -645,6 +667,12 @@
                panY: state.panY + dy / (preview.clientHeight || 150) * 100 });
       return;
     }
+    if (drag.model || (e.shiftKey && e.altKey)) {
+      if (!state.showCube) return;
+      const next = G.moveModel(state, dx * w / (preview.clientWidth || w), dy * h / (preview.clientHeight || h), w, h);
+      change({ modelPositions: next.modelPositions });
+      return;
+    }
     if (moveMode === 'plane' && state.showCube) {
       const next = G.moveModel(state, dx * w / (preview.clientWidth || w), dy * h / (preview.clientHeight || h), w, h);
       change({ modelPositions: next.modelPositions });
@@ -666,6 +694,39 @@
   preview.addEventListener('pointerup', endDrag);
   preview.addEventListener('pointercancel', endDrag);
 
+  // Botão flutuante: amplia o preview para o painel inteiro e volta.
+  const expandBtn = $('expandBtn');
+  function setPreviewMax(on) {
+    previewMax = !!on;
+    document.querySelector('.panel').classList.toggle('preview-max', previewMax);
+    const label = previewMax ? 'Voltar ao painel (Esc)' : 'Ampliar preview';
+    if (expandBtn) {
+      expandBtn.title = label;
+      expandBtn.setAttribute('aria-label', label);
+      expandBtn.setAttribute('aria-pressed', String(previewMax));
+    }
+    fitPreviewBox();
+    drawPreview();
+  }
+  if (expandBtn) {
+    // Não deixa o clique no botão virar um arraste de órbita no preview.
+    expandBtn.addEventListener('pointerdown', e => { e.stopPropagation(); });
+    expandBtn.addEventListener('click', e => { e.stopPropagation(); setPreviewMax(!previewMax); });
+  }
+  document.addEventListener('keydown', e => {
+    if (previewMax && (e.key === 'Escape' || e.keyCode === 27)) { e.preventDefault(); setPreviewMax(false); }
+  });
+
+  // Shift + Alt + Z = devolve o modelo ao centro (mesma ação do botão "Centralizar").
+  document.addEventListener('keydown', e => {
+    const isZ = e.code === 'KeyZ' || e.keyCode === 90 || (e.key && e.key.toLowerCase() === 'z');
+    if (!isZ || !e.shiftKey || !e.altKey) return;
+    e.preventDefault();
+    if (e.stopPropagation) e.stopPropagation();
+    change({ modelPositions: { ...state.modelPositions, [state.referenceModel]: [0,0,0] } });
+    setStatus('Posição do modelo restaurada.');
+  }, true);
+
   // Orientation cube: dragging always orbits the camera.
   const cubeEl = $('cube');
   if (cubeEl) {
@@ -681,21 +742,36 @@
     cubeEl.addEventListener('pointercancel', endCube);
   }
 
-  // Scroll wheel over the preview = scene zoom (viewZoom). Never touches the
-  // lens. We stop the event hard so it does not scroll the panel behind it.
+  // Scroll wheel over the preview = scene zoom (viewZoom); Shift + wheel = lens
+  // focal length (mm). We stop the event hard so it does not scroll the panel.
   let wheelSettle = null;
   function onWheel(e) {
     if (e.preventDefault) e.preventDefault();
     if (e.stopPropagation) e.stopPropagation();
     if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
-    // Normalize delta across wheel / mousewheel / DOMMouseScroll.
+    // Normalize delta across wheel / mousewheel / DOMMouseScroll. With Shift the
+    // system usually turns the wheel into horizontal scroll, hence deltaX.
     let delta = 0;
     if (typeof e.deltaY === 'number' && e.deltaY !== 0) delta = e.deltaY;
+    else if (typeof e.deltaX === 'number' && e.deltaX !== 0) delta = e.deltaX;
     else if (typeof e.wheelDelta === 'number' && e.wheelDelta !== 0) delta = -e.wheelDelta;
     else if (typeof e.detail === 'number' && e.detail !== 0) delta = e.detail * 40;
+    if (!delta) return false;
     const factor = Math.exp(-delta * 0.0015);
     interacting = true;
-    change({ viewZoom: G.clamp(state.viewZoom * factor, 25, 300) });
+    if (e.shiftKey) {
+      // Roda para cima = lente mais longa. Passo mínimo de 1 mm para nunca travar.
+      if (state.projection === 'ortho') setStatus('A ortográfica não usa lente: troque a perspectiva para mudar os mm.');
+      else {
+        const now = Math.round(state.focalLength);
+        let mm = Math.round(G.clamp(state.focalLength * factor, 10, 300));
+        if (mm === now) mm = G.clamp(now + (delta < 0 ? 1 : -1), 10, 300);
+        change({ focalLength: mm });
+        setStatus('Distância focal: ' + mm + ' mm');
+      }
+    } else {
+      change({ viewZoom: G.clamp(state.viewZoom * factor, 25, 300) });
+    }
     clearTimeout(wheelSettle);
     wheelSettle = setTimeout(() => { interacting = false; drawPreview(); }, 160);
     return false;
