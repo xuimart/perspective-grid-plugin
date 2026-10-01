@@ -1,7 +1,7 @@
 {
   "id": "com.xuimart.perspectivegrid",
   "name": "Perspective Grid",
-  "version": "0.8.7",
+  "version": "0.8.9",
   "main": "index.html",
   "manifestVersion": 6,
   "host": {

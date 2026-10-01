@@ -38,6 +38,30 @@
     return boxes;
   }
 
+  // Standing figure for scale/perspective reference (plugin-only; not in the web
+  // prototype). Blocky mannequin about 7.5 heads tall, built from boxes like the
+  // other models. Spans y = -1 (soles) to +1 (top of head), the same height as
+  // the 2x2x2 box, and faces +z: the nose and the toes mark the front.
+  function personBoxes() {
+    const skin = '#d9b8a0', shirt = '#8fa9b3', pants = '#5d6f7a', shoes = '#465259';
+    const list = [];
+    const box = (size, pos, color) => list.push({ size, pos, color });
+    box([.19, .267, .23], [0, .867, 0], skin);            // head
+    box([.04, .05, .035], [0, .84, .1325], skin);         // nose (front = +z)
+    box([.09, .073, .09], [0, .6965, 0], skin);           // neck
+    box([.44, .46, .24], [0, .43, 0], shirt);             // torso
+    box([.40, .267, .235], [0, .0665, 0], pants);         // hips
+    for (const s of [-1, 1]) {
+      box([.10, .39, .11], [s * .275, .465, 0], shirt);   // upper arm
+      box([.085, .33, .095], [s * .275, .105, 0], skin);  // forearm
+      box([.065, .15, .09], [s * .275, -.135, 0], skin);  // hand
+      box([.165, .466, .175], [s * .105, -.30, 0], pants); // thigh
+      box([.13, .397, .14], [s * .105, -.7315, 0], pants); // shin
+      box([.115, .07, .26], [s * .105, -.965, .05], shoes); // foot (toe forward)
+    }
+    return list;
+  }
+
   // Build the full edge list for a model (before scale/position transforms).
   function modelBoxes(name) {
     const b = [];
@@ -59,6 +83,8 @@
       b.push(...boxEdges([.7, .65, .7], [1.4, -1.4, .2], '#bb9e87'));
       b.push(...boxEdges([.7, .75, .1], [1.4, -.85, .55], '#bb9e87'));
       b.push(...boxEdges([1.2, .9, .08], [.5, .7, -2.39], '#8babad'));
+    } else if (name === 'person') {
+      for (const p of personBoxes()) b.push(...boxEdges(p.size, p.pos, p.color));
     }
     return b;
   }
@@ -122,6 +148,7 @@
       box([1.75,.45,3.1],[-1.55,-1.42,-.3],'#6f9096'); box([1.75,.18,3.1],[-1.55,-1.11,-.3],'#e6e8df'); box([1.3,.16,.6],[-1.55,-.94,-1.35],'#f0ebe2');
       table(1.35,-.35,-1.45,.63); box([.75,.08,.5],[1.2,-.23,-1.5],'#d4b685'); box([.7,.65,.7],[1.4,-1.4,.2],'#bb9e87'); box([.7,.75,.1],[1.4,-.85,.55],'#bb9e87'); box([1.2,.9,.08],[.5,.7,-2.39],'#8babad');
     }
+    else if (name === 'person') list.push(...personBoxes());
     return list;
   }
 

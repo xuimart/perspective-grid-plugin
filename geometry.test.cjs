@@ -155,19 +155,29 @@ test('locked perspective modes retain exactly their vanishing-point count throug
   }
 });
 
-test('scene zoom scales projection inside fixed document dimensions without changing lens or distance',()=>{
-  for(const preset of ['one','two','three','five','ortho']){
-    const s=G.normalize({preset,focalLength:35,viewZoom:100});
+test('scene zoom never acts as a lens: perspective zoom dollies and keeps the vanishing points',()=>{
+  const cube=[];for(const x of [-1.5,1.5])for(const y of [-1.5,1.5])for(const z of [-1.5,1.5])cube.push([x,y,z]);
+  for(const preset of ['free','one','two','three','five']){
+    const s=G.normalize({preset,focalLength:35,viewZoom:100,yaw:31,pitch:17});
     const zoomed=G.normalize({...s,viewZoom:250});
     const a=G.camera(s,1600,1000),b=G.camera(zoomed,1600,1000);
-    assert.equal(b.width,a.width);assert.equal(b.height,a.height);assert.equal(b.distance,a.distance);
-    assert.equal(zoomed.focalLength,s.focalLength);
-    const p=G.project([1,.5,0],a),q=G.project([1,.5,0],b);
-    assert.ok(Math.abs((q[0]-b.cx)/(p[0]-a.cx)-2.5)<1e-8);
+    assert.equal(b.width,a.width);assert.equal(b.height,a.height);
+    assert.equal(zoomed.focalLength,s.focalLength);assert.equal(b.focal,a.focal);
+    assert.ok(Math.abs(b.distance-a.distance/2.5)<1e-9,`${preset}: dolly in`);
+    const va=G.vanishingPoints(a),vb=G.vanishingPoints(b);
+    assert.equal(vb.length,va.length);
+    va.forEach((v,i)=>assert.ok(Math.hypot(v.x-vb[i].x,v.y-vb[i].y)<1e-6,`${preset}: PF ${i+1}`));
+    if(preset!=='five')assert.deepEqual(G.projectedLines({...zoomed,gridStyle:'rays'},1600,1000),G.projectedLines({...s,gridStyle:'rays'},1600,1000));
+    assert.ok(G.framingSize(zoomed,cube)>G.framingSize(s,cube)*1.5,`${preset}: model comes closer`);
     assert.deepEqual(G.camera(s,300,180,true),G.camera(zoomed,300,180,true));
-    if(['two','three','five'].includes(preset))assert.notEqual(G.svg(s),G.svg(zoomed));
     assert.equal(G.normalize({...zoomed,focalLength:85,distortion:40}).viewZoom,250);
   }
+  // Orthographic has no lens: zoom stays a uniform magnification about the center.
+  const o=G.normalize({preset:'ortho',viewZoom:100}),oz=G.normalize({...o,viewZoom:250});
+  const a=G.camera(o,1600,1000),b=G.camera(oz,1600,1000);
+  assert.equal(b.distance,a.distance);
+  const p=G.project([1,.5,0],a),q=G.project([1,.5,0],b);
+  assert.ok(Math.abs((q[0]-b.cx)/(p[0]-a.cx)-2.5)<1e-8);
 });
 
 test('lens changes preserve model framing by dollying, without changing zoom or mode',()=>{
@@ -214,7 +224,7 @@ test('model translation follows screen drags in 3D while camera and grid remain 
 
 test('model positions are independent, sanitized and persisted without shared mutable defaults',()=>{
   const s=G.normalize({modelPositions:{box:[5,NaN,-200],table:[Infinity,8,2],room:'invalid'}});
-  assert.deepEqual(s.modelPositions,{box:[5,0,-100],table:[0,8,2],room:[0,0,0]});
+  assert.deepEqual(s.modelPositions,{box:[5,0,-100],table:[0,8,2],room:[0,0,0],person:[0,0,0]});
   const moved=G.moveModel(G.normalize({showCube:true,referenceModel:'table'}),80,20,1600,1000);
   assert.notDeepEqual(moved.modelPositions.table,[0,0,0]);
   assert.deepEqual(moved.modelPositions.box,[0,0,0]);

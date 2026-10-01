@@ -19,7 +19,7 @@
     projection: 'perspective', preset: 'free', density: 20, opacity: 80,
     lineWidth: 1.5, color: '#414447', horizonColor: '#b77728', aspect: 1.6, gridStyle:'rays',
     xCount: 16, yCount: 12, zCount: 16, boxSize: 1.5, referenceModel: 'box',
-    modelPositions: {box:[0,0,0],table:[0,0,0],room:[0,0,0]},
+    modelPositions: {box:[0,0,0],table:[0,0,0],room:[0,0,0],person:[0,0,0]},
     xLines: true, yLines: true, zLines: true,
     showGrid: true, showCube: false, showHorizon: true, showAxes: false, showVps: true
   };
@@ -51,9 +51,9 @@
       if(!Number.isFinite(input.yaw))state.yaw=0;
       if(!Number.isFinite(input.pitch))state.pitch=0;
     }
-    if (['box','table','room'].includes(input.referenceModel)) state.referenceModel=input.referenceModel;
+    if (['box','table','room','person'].includes(input.referenceModel)) state.referenceModel=input.referenceModel;
     state.modelPositions={};
-    for(const name of ['box','table','room']){
+    for(const name of ['box','table','room','person']){
       const position=input.modelPositions?.[name];
       state.modelPositions[name]=[0,1,2].map(i=>Array.isArray(position)&&Number.isFinite(position[i])?clamp(position[i],-100,100):0);
     }
@@ -87,18 +87,22 @@
     const right = r0.map((v, i) => v * cr + u0[i] * sr);
     const up = u0.map((v, i) => v * cr - r0[i] * sr);
     const forward = [-sy * cp, -sp, -cy * cp];
-    const distance = gizmo ? 16 : state.distance;
+    // Scene zoom must never act like a lens change. Magnifying the image inside
+    // the fixed document frame is optically identical to a longer focal length,
+    // so in perspective/fisheye the zoom DOLLIES the camera toward the pivot:
+    // the focal and the vanishing points stay fixed, only the scene comes
+    // closer. Orthographic has no lens, so there zoom stays a magnification.
+    const zoom = gizmo ? 1 : state.viewZoom / 100;
+    const dolly = !gizmo && state.projection !== 'ortho';
+    const distance = gizmo ? 16 : (dolly ? state.distance / zoom : state.distance);
     return {
       width, height, right, up, forward, distance,
       eye: forward.map(v => -v * distance),
       cx: width * (.5 + (gizmo ? 0 : state.panX / 100)),
       cy: height * ((gizmo ? .46 : .5) + (gizmo ? 0 : state.panY / 100)),
-      // Lens (focal) is independent of scene zoom: focal comes only from the mm
-      // lens. Zoom is a pure post-projection magnification (see fromCamera),
-      // so it never changes perspective/convergence — only enlarges the image.
       focal: width * state.focalLength / 36,
       scale: gizmo ? Math.min(width, height) * .265 : Math.min(width, height) / state.distance,
-      zoom: gizmo ? 1 : state.viewZoom / 100,
+      zoom: dolly ? 1 : zoom,
       ortho: gizmo || state.projection === 'ortho', fisheye: !gizmo && state.projection==='fisheye',
       distortion: state.distortion/100, near: .12
     };
@@ -108,8 +112,8 @@
     return [dot(relative, cam.right), dot(relative, cam.up), dot(relative, cam.forward)];
   }
   function fromCamera(p, cam) {
-    // Zoom is applied as a uniform magnification about the frame center AFTER
-    // projection (zoomPoint), so perspective/convergence never changes with zoom.
+    // cam.zoom is only != 1 in orthographic mode (uniform magnification about
+    // the frame center). Perspective zoom is a dolly, handled in camera().
     if(cam.fisheye){
       const length=Math.hypot(p[0],p[1]);
       if(length<1e-12)return zoomPoint([cam.cx,cam.cy],cam);
@@ -121,8 +125,7 @@
     const scale = cam.ortho ? cam.scale : cam.focal / p[2];
     return zoomPoint([cam.cx + p[0] * scale, cam.cy - p[1] * scale],cam);
   }
-  // Uniform magnification about the frame center. Enlarges the whole image
-  // without changing perspective. Applied everywhere lines are produced.
+  // Uniform magnification about the frame center (orthographic zoom only).
   function zoomPoint(pt, cam) {
     const z = cam.zoom == null ? 1 : cam.zoom;
     if (z === 1 || !pt) return pt;
@@ -272,7 +275,9 @@
     if(!Number.isFinite(target)||target<=0)return after.distance;
     const cam=camera(after,1600,1600/after.aspect);
     // Keep the complete model ahead of the near plane during the dolly adjustment.
-    let lo=Math.max(bounds.distance[0],minimumDistance,...points.map(p=>cam.near-dot(p,cam.forward)+.001));
+    // The camera sits at distance / zoom in perspective, so scale the bound back.
+    const n=normalize(after),dollyZoom=n.projection==='ortho'?1:n.viewZoom/100;
+    let lo=Math.max(bounds.distance[0],minimumDistance,...points.map(p=>(cam.near-dot(p,cam.forward)+.001)*dollyZoom));
     let hi=bounds.distance[1];lo=Math.min(lo,hi);
     for(let i=0;i<32;i++){
       const distance=(lo+hi)/2;
