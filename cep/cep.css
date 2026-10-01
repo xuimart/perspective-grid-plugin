@@ -21,6 +21,3 @@ sp-dropdown select:disabled { opacity: .4; }
 sp-checkbox .spc { display: flex; align-items: center; min-height: 24px; cursor: pointer; }
 sp-checkbox input { margin: 0 6px 0 0; }
 .count-row sp-checkbox input { margin: 0; }
-
-/* O aviso de atualizacao ainda nao existe nesta versao. */
-#checkUpdateBtn { display: none; }

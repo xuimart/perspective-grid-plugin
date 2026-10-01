@@ -194,6 +194,9 @@ button.full { margin-top:10px; }
 .about-row { display:flex; align-items:center; justify-content:space-between; margin-top:6px; font-size:10px; line-height:14px; color:var(--muted); }
 .link-btn { padding:0; background:transparent; border:0; font-size:10px; line-height:14px; color:var(--muted); text-decoration:underline; }
 .link-btn:hover { background:transparent; color:var(--text); }
+/* Verificar atualização: botão pequeno com borda, fácil de achar no rodapé. */
+#checkUpdateBtn { padding:3px 8px; font-size:10px; line-height:14px; color:var(--text); text-decoration:none; border:1px solid var(--line); border-radius:3px; }
+#checkUpdateBtn:hover, #checkUpdateBtn:focus { border-color:var(--accent); background:transparent; }
 
 @media (max-height:520px) { .top { padding-top:5px; } .tabs { padding-top:3px; flex-basis:38px; margin-bottom:3px; } .tabs button { height:35px; } .actions { padding:8px 12px; } .apply-row button { height:31px; } }
 @media (min-width:500px) { .row > label:first-child { flex-basis:150px; font-size:13px; } .angle-row input { width:60px; } .angle-row label { font-size:11px; } .ortho-angles > .row { flex-basis:145px; } .ortho-angles .dd { width:145px; } .tabs button { font-size:14px; } .apply-row button { height:43px; font-size:13px; } }

@@ -2,7 +2,11 @@
 # WinForms compilado com o csc.exe do .NET Framework, com o plugin embutido.
 #   dist\installer\PerspectiveGrid_CEP_Setup.exe
 # Roda o build-cep.cjs antes, entao o plugin embutido e sempre o atual.
-# Uso: powershell -File build-cep-installer.ps1
+# Com -Changelog tambem grava o version-cep.json (aviso de atualizacao do CEP).
+# Ordem do padrao: publicar a release, conferir o link e SO DEPOIS fazer push
+# do version-cep.json (e ele que avisa os usuarios).
+# Uso: powershell -File build-cep-installer.ps1 [-Changelog "Novidades"]
+param([string]$Changelog)
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.IO.Compression
 Add-Type -AssemblyName System.IO.Compression.FileSystem
@@ -88,6 +92,14 @@ $packed = [regex]::Match($xml, 'ExtensionBundleVersion="([^"]+)"').Groups[1].Val
 if ($cepEntries -ne $files.Count -or $other -ne 0) { throw "payload com $cepEntries entradas cep/ e $other fora (esperado $($files.Count) e 0)" }
 if ($packed -ne $version) { throw "versao embutida $packed diferente de $version" }
 $fv = [System.Diagnostics.FileVersionInfo]::GetVersionInfo($exe)
+
+# 6. version-cep.json: o downloadUrl NUNCA muda. UTF-8 sem BOM.
+if ($Changelog) {
+  $downloadUrl = 'https://github.com/xuimart/perspective-grid-plugin/releases/latest/download/PerspectiveGrid_CEP_Setup.exe'
+  $json = [ordered]@{ version = $version; downloadUrl = $downloadUrl; changelog = $Changelog } | ConvertTo-Json
+  [System.IO.File]::WriteAllText((Join-Path $root 'version-cep.json'), $json + "`n", (New-Object System.Text.UTF8Encoding($false)))
+  Write-Output "json    : $(Join-Path $root 'version-cep.json')"
+}
 
 Write-Output "versao  : $version (arquivo $($fv.FileVersion))"
 Write-Output "payload : $cepEntries arquivos sob cep/, $other fora"

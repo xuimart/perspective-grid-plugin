@@ -14,8 +14,9 @@
 
   // Hospedado no próprio repositório (opção "GitHub raw" do guia). O domínio
   // precisa constar em requiredPermissions.network.domains no manifest.
-  // A versão CEP define PG_UPDATE_URL antes deste arquivo; null desliga o aviso
-  // (o version.json do UXP aponta para o .ccx, que não serve no Photoshop 2020).
+  // A versão CEP define PG_UPDATE_URL antes deste arquivo e lê o version-cep.json,
+  // que aponta para o instalador .exe (o .ccx do UXP não serve no Photoshop antigo).
+  // null desliga o aviso.
   const UPDATE_CHECK_URL = root.PG_UPDATE_URL !== undefined ? root.PG_UPDATE_URL
     : 'https://raw.githubusercontent.com/xuimart/perspective-grid-plugin/master/version.json';
   const TIMEOUT_MS = 8000;

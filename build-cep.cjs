@@ -27,6 +27,7 @@ const PACKAGE = path.join(ROOT, 'dist', 'cep', 'PerspectiveGrid-CEP');
 const EXT = path.join(PACKAGE, ID);
 const ZIP = path.join(ROOT, 'dist', `PerspectiveGrid-CEP-${VERSION}.zip`);
 const TARGET = 'chrome57';
+const CEP_UPDATE_URL = 'https://raw.githubusercontent.com/xuimart/perspective-grid-plugin/master/version-cep.json';
 
 // Ordem de carga no painel. ps-adapter-cep.js substitui o ps-adapter.js do UXP.
 const SCRIPTS = [
@@ -44,8 +45,9 @@ const SCRIPTS = [
 const CONFIG = [
   '// Gerado por build-cep.cjs. A versão vem do uxp/manifest.json.',
   `window.PG_VERSION = ${JSON.stringify(VERSION + '-cep')};`,
-  '// Aviso de atualização desligado: o version.json do UXP aponta para o .ccx.',
-  'window.PG_UPDATE_URL = null;',
+  '// Aviso de atualização próprio do CEP: o version.json do UXP aponta para o',
+  '// .ccx; o version-cep.json aponta para o PerspectiveGrid_CEP_Setup.exe.',
+  `window.PG_UPDATE_URL = ${JSON.stringify(CEP_UPDATE_URL)};`,
   ''
 ].join('\n');
 
