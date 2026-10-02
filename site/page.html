@@ -1,8 +1,8 @@
 <!--
   Perspective Grid: página de venda (bloco para o widget HTML do Elementor).
   Mesma identidade da página do DrawlapsePS (cores, fontes, cards, botões).
-  Os {{...}} são trocados pelo site/build-site.cjs:
-   - marcadores de config e os textos "t ponto chave" vêm do dicionário em build-site.cjs
+  Os marcadores são trocados pelo site/build-site.cjs:
+   - config (versão, checkout, imagens) e os textos vêm do dicionário em site/strings.js
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap">
@@ -177,10 +177,9 @@
 .pgr-faq-item.open .pgr-faq-a{max-height:320px;padding:0 1.25rem 1.1rem;}
 
 /* IDIOMA */
-.pgr-lang{position:absolute;top:1rem;right:1rem;z-index:5;display:flex;gap:4px;}
-.pgr-lang a{font-size:.72rem;font-weight:700;letter-spacing:.04em;color:var(--td);border:1px solid var(--b);border-radius:100px;padding:4px 10px;background:rgba(10,10,15,.5);}
-.pgr-lang a.active{color:#fff;background:var(--r);border-color:var(--r);}
-.pgr-lang a:hover{color:var(--t);border-color:rgba(222,34,70,.5);}
+.pgr-lang{position:absolute;top:1rem;right:1rem;z-index:5;}
+.pgr-lang button{font-family:'Inter',sans-serif;font-size:.74rem;font-weight:700;letter-spacing:.04em;color:var(--t);border:1px solid rgba(255,255,255,.18);border-radius:100px;padding:6px 14px;background:rgba(10,10,15,.6);cursor:pointer;transition:background .15s,border-color .15s;}
+.pgr-lang button:hover{background:rgba(222,34,70,.2);border-color:rgba(222,34,70,.45);}
 
 /* XUIMZINHO */
 .pgr-xui{display:flex;align-items:flex-end;justify-content:center;gap:1.5rem;flex-wrap:wrap;}
@@ -197,8 +196,8 @@
 
 <div class="pgr-embed" id="pgrEmbed">
 
-  <!-- Troca de idioma: leva à outra página (PT/EN) -->
-  <div class="pgr-lang">{{LANG_LINKS}}</div>
+  <!-- Troca de idioma na própria página (JS alterna PT/EN) -->
+  <div class="pgr-lang"><button type="button" id="pgrLangBtn" aria-label="Português / English">EN</button></div>
 
   <!-- HERO -->
   <section class="pgr-hero">
@@ -211,7 +210,7 @@
         <h1>{{t.hero.title}}</h1>
         <p class="pgr-hero-desc">{{t.hero.desc}}</p>
         <div class="pgr-hero-actions">
-          <a href="{{CHECKOUT}}" class="pgr-btn pgr-btn-primary pgr-btn-lg" target="_blank" rel="noopener">
+          <a href="{{CHECKOUT}}" class="pgr-btn pgr-btn-primary pgr-btn-lg pgr-checkout" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L5 3H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
             {{t.hero.buy}}
           </a>
@@ -220,7 +219,7 @@
         <p class="pgr-hero-note">{{t.hero.note}}</p>
       </div>
       <div class="pgr-hero-shot">
-        <img src="{{IMG}}{{HERO}}" width="1200" height="800" alt="{{t.hero.shotAlt}}">
+        <img id="pgrHero" src="{{IMG}}{{HERO}}" width="1200" height="800" alt="{{t.hero.shotAlt}}">
       </div>
     </div>
   </section>
@@ -394,14 +393,14 @@
         <div class="pgr-get-ver">{{t.get.ver}}</div>
         <h2>{{t.get.title}}</h2>
         <p>{{t.get.sub}}</p>
-        {{PRICE_BLOCK}}
+        <div id="pgrPriceBox">{{PRICE_BLOCK}}</div>
         <ul class="pgr-includes">
           <li>{{t.get.inc1}}</li>
           <li>{{t.get.inc2}}</li>
           <li>{{t.get.inc3}}</li>
         </ul>
         <div>
-          <a href="{{CHECKOUT}}" class="pgr-btn pgr-btn-primary pgr-btn-lg" target="_blank" rel="noopener">
+          <a href="{{CHECKOUT}}" class="pgr-btn pgr-btn-primary pgr-btn-lg pgr-checkout" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L5 3H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
             {{t.get.buy}}
           </a>
