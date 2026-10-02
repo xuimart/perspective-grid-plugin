@@ -1,13 +1,15 @@
 /*
  * Monta a página de venda do Perspective Grid a partir de site/page.html.
+ * Gera uma versão por idioma (pt, en) com os textos do dicionário STRINGS.
  *
  * Saída (dist/site/):
- *   perspectivegrid-elementor.html  bloco para colar num widget HTML do Elementor
- *                                   (imagens com endereço absoluto do site)
- *   preview.html                    a mesma página para abrir no navegador local
- *   img/                            imagens que a página usa (subir via FileZilla)
+ *   perspectivegrid-elementor.html     bloco PT para o widget HTML do Elementor
+ *   perspectivegrid-elementor-en.html  bloco EN
+ *   preview.html / preview-en.html     para abrir no navegador local
+ *   img/                               imagens usadas (subir via FileZilla)
  *
- * Uso: node site/build-site.cjs [--checkout=URL] [--price="R$ 49,90"]
+ * Uso: node site/build-site.cjs [--checkout=URL] [--checkout-en=URL]
+ *                               [--price="R$ 49,90"] [--price-en="$9.90"]
  */
 'use strict';
 const fs = require('fs');
@@ -18,34 +20,180 @@ const OUT = path.join(ROOT, 'dist', 'site');
 const args = Object.fromEntries(process.argv.slice(2)
   .map(a => /^--([^=]+)=(.*)$/.exec(a)).filter(Boolean).map(m => [m[1], m[2]]));
 
-// ---- Configuração da página -------------------------------------------------
+// ---- Configuração --------------------------------------------------------
 const CONFIG = {
-  // Link do checkout da Eduzz (copie da página do produto na Eduzz).
-  checkout: args.checkout || 'https://chk.eduzz.com/COLOQUE-O-CODIGO-DO-PRODUTO',
-  // Preço exibido no card de compra. Vazio = não mostra preço.
-  price: args.price || '',
-  // Pasta das imagens no site. No FileZilla: public_html/wp-content/uploads/perspectivegrid/
-  imgBase: args.img || 'https://xuimart.com.br/wp-content/uploads/perspectivegrid/',
-  // Endereço final da página (o formulário de suporte volta para cá).
-  pageUrl: args.page || 'https://xuimart.com.br/perspectivegrid/',
+  checkoutPt: args.checkout || 'https://chk.eduzz.com/1W322BQ592',
+  checkoutEn: args['checkout-en'] || args.checkout || 'https://chk.eduzz.com/1W322BQ592',
+  pricePt: args.price || '',
+  priceEn: args['price-en'] || '',
+  // Pasta das imagens no site (mesma para os dois idiomas).
+  imgBase: args.img || 'https://xuimart.com.br/drawcolor/IMG/',
+  pageUrlPt: args.page || 'https://xuimart.com.br/perspectivegrid/',
+  pageUrlEn: args['page-en'] || 'https://xuimart.com.br/perspectivegrid-en/',
   supportEmail: 'perspectivegridsuporte@xuimart.com.br'
 };
-// -----------------------------------------------------------------------------
+// --------------------------------------------------------------------------
 
 const VERSION = JSON.parse(fs.readFileSync(path.join(ROOT, 'uxp', 'manifest.json'), 'utf8')).version;
 const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-function render(imgBase) {
-  const priceBlock = CONFIG.price
-    ? `<div class="pgr-price">${esc(CONFIG.price)}</div>\n        <div class="pgr-price-note">pagamento único</div>`
+// Dicionário. HTML permitido só onde indicado (hero.title usa <br> e <em>).
+const STRINGS = {
+  pt: {
+    'hero.badge': 'Plugin para Photoshop',
+    'hero.title': 'Perspectiva certa,<br><em>em segundos</em>',
+    'hero.desc': 'Monte grades de 1, 2 e 3 pontos, olho de peixe e isométrica direto no Photoshop. A grade vai para uma camada própria, pronta para você desenhar por cima.',
+    'hero.buy': 'Comprar agora',
+    'hero.tour': 'Ver o painel',
+    'hero.note': 'Windows · Photoshop CC 2018 ou mais recente',
+    'hero.shotAlt': 'Painel do Perspective Grid com uma cena de quarto desenhada sobre a grade de perspectiva',
+    'new': 'Novo',
+    'feat.label': 'Funcionalidades',
+    'feat.title': 'Tudo para montar a perspectiva da sua cena',
+    'feat.desc': 'Nada de puxar linhas de fuga na mão, régua por régua. Escolha a câmera, ajuste no preview e aplique.',
+    'feat.1t': 'Todas as perspectivas', 'feat.1d': 'Livre, 1 ponto, 2 pontos, 3 pontos, olho de peixe e ortográfica.',
+    'feat.2t': 'Lente de verdade', 'feat.2d': 'De 10 a 300 mm. Segure Shift e gire a roda do mouse para trocar a lente na hora.',
+    'feat.3t': 'Olho de peixe', 'feat.3d': 'Preenche a cena inteira, e as guias e o modelo curvam como numa lente real.',
+    'feat.4t': 'Vistas prontas', 'feat.4d': 'Isométrica, dimétrica, trimétrica, frente, lado e topo, com um clique.',
+    'feat.5t': 'Controle no preview', 'feat.5d': 'Arraste para girar a câmera, botão direito para reposicionar e roda do mouse para o zoom.',
+    'feat.6t': 'Modelos de referência', 'feat.6d': 'Caixa, mesa, quarto e personagem para sentir escala. Shift + Alt + arrastar move o modelo.',
+    'feat.7t': 'Camada própria', 'feat.7d': 'A grade vai para a camada "Perspective Grid", no tamanho do documento. Ctrl+Z desfaz.',
+    'feat.8t': 'Preview ampliado', 'feat.8d': 'Um botão no canto leva a cena para o painel inteiro. Ótimo para estudar e demonstrar.',
+    'types.label': 'Tipos de perspectiva',
+    'types.title': 'Uma grade para cada cena',
+    'types.desc': 'Todas as imagens abaixo saíram do próprio Perspective Grid, sem retoque.',
+    'types.1t': '1 ponto', 'types.1d': 'Corredores, ruas e cenas de frente.',
+    'types.2t': '2 pontos', 'types.2d': 'Ambientes e prédios vistos pela quina.',
+    'types.3t': '3 pontos', 'types.3d': 'Vistas de cima ou de baixo, com mais drama.',
+    'types.4t': 'Olho de peixe', 'types.4d': 'Lente de 10 mm preenchendo o quadro inteiro.',
+    'types.5t': 'Isométrica', 'types.5d': 'Sem pontos de fuga: games, diagramas e mapas.',
+    'types.6t': 'Escala com personagem', 'types.6d': 'Um boneco de referência para acertar o tamanho das coisas.',
+    'types.axes': 'Cores das linhas por eixo', 'types.axisX': 'Eixo X', 'types.axisY': 'Eixo Y', 'types.axisZ': 'Eixo Z',
+    'how.label': 'Como funciona', 'how.title': 'Simples assim', 'how.desc': 'Da compra à primeira grade em poucos minutos.',
+    'how.1t': 'Compre e baixe', 'how.1d': 'Pagamento seguro pela Eduzz. Você recebe o instalador .exe.',
+    'how.2t': 'Instale', 'how.2d': 'Dois cliques, sem pedir administrador. Depois reinicie o Photoshop.',
+    'how.3t': 'Abra o painel', 'how.3d': 'Janela → Extensões → Perspective Grid.',
+    'how.4t': 'Aplique e desenhe', 'how.4d': 'Ajuste a câmera, clique em "Aplicar na camada" e desenhe por cima.',
+    'tour.label': 'Veja na prática', 'tour.title': 'Conheça cada tela do painel', 'tour.desc': 'Direto, bilíngue e pensado para artistas.',
+    'tour.prev': 'Tela anterior', 'tour.next': 'Próxima tela',
+    'tour.1n': '01 / 05 · Câmera', 'tour.1t': 'A câmera na palma da mão', 'tour.1d': 'Escolha a perspectiva e a lente, gire arrastando no preview e veja a grade mudar ao vivo. Rotação e inclinação também aceitam números exatos.', 'tour.1a': 'Lente 10–300 mm', 'tour.1b': 'Zoom da cena', 'tour.1c': 'Roll',
+    'tour.2n': '02 / 05 · Grade', 'tour.2t': 'As linhas do seu jeito', 'tour.2d': 'Raios de fuga, malha espacial ou chão alinhado. Linhas cinza, pretas ou coloridas por eixo, com quantidade, opacidade e espessura.', 'tour.2a': '3 construções', 'tour.2b': 'Cores por eixo', 'tour.2c': 'Pontos de fuga',
+    'tour.3n': '03 / 05 · Modelo', 'tour.3t': 'Escala e profundidade antes do primeiro traço', 'tour.3d': 'Caixa, mesa, quarto ou personagem, com volume sombreado. Mova o modelo no plano, em profundidade na direção de um ponto de fuga ou por X, Y e Z.', 'tour.3a': '4 modelos', 'tour.3b': 'Shift + Alt move', 'tour.3c': 'Shift + Alt + Z centraliza',
+    'tour.4n': '04 / 05 · Olho de peixe', 'tour.4t': 'Distorção de lente sem fazer conta', 'tour.4d': 'A 10 mm a lente alcança os cantos do quadro. Aumente os milímetros para fechar o recorte. A grade e o modelo curvam juntos.', 'tour.4a': 'Tela cheia', 'tour.4b': 'Guias curvas', 'tour.4c': 'Shift + roda = mm',
+    'tour.5n': '05 / 05 · Preview ampliado', 'tour.5t': 'A cena do tamanho do painel', 'tour.5d': 'Clique no botão do canto do preview e esconda todos os controles. Continua girando, com zoom e tudo. O Esc volta.', 'tour.5a': 'Demonstrações', 'tour.5b': 'Esc volta',
+    'keys.label': 'Atalhos', 'keys.title': 'Tudo no mouse, sem caçar menu', 'keys.desc': 'Os gestos funcionam em cima do preview do painel.',
+    'keys.orbit': 'Girar a câmera', 'keys.pan': 'Reposicionar a cena', 'keys.zoom': 'Zoom da cena', 'keys.lens': 'Trocar a lente (mm)', 'keys.move': 'Mover o modelo', 'keys.center': 'Centralizar o modelo',
+    'keys.drag': 'Arrastar', 'keys.rmb': 'Botão direito', 'keys.wheel': 'Roda',
+    'req.title': 'Requisitos do sistema', 'req.sys': 'Sistema', 'req.ps': 'CC 2018 ou mais recente', 'req.inst': 'Instalador', 'req.instVal': '~100 KB, sem admin',
+    'get.ver': 'Versão ' + VERSION + ' para Windows', 'get.title': 'Pronto para desenhar em perspectiva?', 'get.sub': 'Pagamento único. Instale e use no seu Photoshop.',
+    'get.inc1': 'Instalador para Photoshop CC 2018 ou mais recente', 'get.inc2': 'Atualizações avisadas dentro do próprio painel', 'get.inc3': 'Suporte por e-mail',
+    'get.buy': 'Comprar o Perspective Grid', 'get.secure': 'Pagamento seguro pela Eduzz: Pix, cartão ou boleto.',
+    'price.note': 'pagamento único',
+    'sup.label': 'Suporte', 'sup.title': 'Encontrou um problema ou tem uma dúvida?', 'sup.desc': 'Descreva abaixo e, se puder, mande um link de screenshot. Respondo o mais rápido que posso.',
+    'sup.sent': 'Mensagem enviada. Obrigado! Respondo no seu e-mail.',
+    'sup.name': 'Seu nome', 'sup.namePh': 'Como posso te chamar?', 'sup.email': 'Seu e-mail', 'sup.emailPh': 'Para eu poder responder',
+    'sup.psver': 'Versão do Photoshop', 'sup.select': 'Selecione...', 'sup.other': 'Outra',
+    'sup.msg': 'Mensagem', 'sup.msgPh': 'O que aconteceu? O que você esperava? Apareceu alguma mensagem de erro?',
+    'sup.shot': 'Link do screenshot (opcional)', 'sup.shotPh': 'Cole um link de imagem (imgur, Google Drive...)', 'sup.shotHint': 'Dica: suba a imagem no imgur.com ou paste.pics e cole o link aqui.', 'sup.send': 'Enviar mensagem',
+    'faq.label': 'Perguntas frequentes', 'faq.title': 'Dúvidas comuns',
+    'faq.q1': 'Funciona no meu Photoshop?', 'faq.a1': 'Funciona no Photoshop CC 2018 ou mais recente, no Windows 10 e 11. Depois de instalar, abra em Janela → Extensões → Perspective Grid.',
+    'faq.q2': 'Ele mexe nas camadas da minha arte?', 'faq.a2': 'Não. A grade fica numa camada própria, chamada "Perspective Grid". Clicar em "Aplicar na camada" de novo redesenha a mesma camada, e um Ctrl+Z desfaz.',
+    'faq.q3': 'Como recebo o plugin depois de comprar?', 'faq.a3': 'A Eduzz libera o download do instalador assim que o pagamento é confirmado. É um arquivo .exe: dois cliques, sem precisar de administrador, e depois é só reiniciar o Photoshop.',
+    'faq.q4': 'E quando sair versão nova?', 'faq.a4': 'O próprio painel avisa e mostra o que mudou. O botão "Baixar" abre o instalador novo, e você também pode clicar em "Verificar atualização" no rodapé do painel.',
+    'faq.q5': 'Preciso de internet para usar?', 'faq.a5': 'Não. A internet só é usada para checar se existe versão nova. A grade é gerada no seu computador.',
+    'faq.q6': 'Funciona no Mac?', 'faq.a6': 'Ainda não. Por enquanto o instalador é só para Windows.',
+    'xui.title': 'Ficou com alguma dúvida antes de comprar? 👀', 'xui.desc': 'Me manda uma mensagem pelo formulário de suporte. Eu mesmo respondo! ♥', 'xui.btn': 'Falar comigo'
+  },
+  en: {
+    'hero.badge': 'Plugin for Photoshop',
+    'hero.title': 'Correct perspective,<br><em>in seconds</em>',
+    'hero.desc': 'Build 1-, 2- and 3-point, fisheye and isometric grids right inside Photoshop. The grid goes on its own layer, ready for you to draw over.',
+    'hero.buy': 'Buy now',
+    'hero.tour': 'See the panel',
+    'hero.note': 'Windows · Photoshop CC 2018 or newer',
+    'hero.shotAlt': 'The Perspective Grid panel next to a room scene drawn over the perspective grid',
+    'new': 'New',
+    'feat.label': 'Features',
+    'feat.title': 'Everything to set up your scene\u2019s perspective',
+    'feat.desc': 'No more drawing vanishing lines by hand, ruler by ruler. Pick the camera, tweak it in the preview and apply.',
+    'feat.1t': 'Every perspective', 'feat.1d': 'Free, 1-point, 2-point, 3-point, fisheye and orthographic.',
+    'feat.2t': 'A real lens', 'feat.2d': 'From 10 to 300 mm. Hold Shift and scroll the mouse wheel to change the lens on the fly.',
+    'feat.3t': 'Fisheye', 'feat.3d': 'Fills the whole scene, and the guides and model curve like a real lens.',
+    'feat.4t': 'Ready-made views', 'feat.4d': 'Isometric, dimetric, trimetric, front, side and top, in one click.',
+    'feat.5t': 'Control in the preview', 'feat.5d': 'Drag to orbit the camera, right-click to reposition and scroll to zoom.',
+    'feat.6t': 'Reference models', 'feat.6d': 'Box, table, room and character to feel scale. Shift + Alt + drag moves the model.',
+    'feat.7t': 'Its own layer', 'feat.7d': 'The grid goes on a "Perspective Grid" layer at document size. Ctrl+Z undoes it.',
+    'feat.8t': 'Expanded preview', 'feat.8d': 'A corner button sends the scene to the whole panel. Great for studying and demos.',
+    'types.label': 'Perspective types',
+    'types.title': 'A grid for every scene',
+    'types.desc': 'Every image below came straight out of Perspective Grid, untouched.',
+    'types.1t': '1 point', 'types.1d': 'Hallways, streets and head-on scenes.',
+    'types.2t': '2 points', 'types.2d': 'Rooms and buildings seen from the corner.',
+    'types.3t': '3 points', 'types.3d': 'High- or low-angle shots, with more drama.',
+    'types.4t': 'Fisheye', 'types.4d': 'A 10 mm lens filling the entire frame.',
+    'types.5t': 'Isometric', 'types.5d': 'No vanishing points: games, diagrams and maps.',
+    'types.6t': 'Scale with a character', 'types.6d': 'A reference figure to get the size of things right.',
+    'types.axes': 'Line colors per axis', 'types.axisX': 'X axis', 'types.axisY': 'Y axis', 'types.axisZ': 'Z axis',
+    'how.label': 'How it works', 'how.title': 'That simple', 'how.desc': 'From checkout to your first grid in a few minutes.',
+    'how.1t': 'Buy and download', 'how.1d': 'Secure checkout via Eduzz. You get the .exe installer.',
+    'how.2t': 'Install', 'how.2d': 'Two clicks, no admin needed. Then restart Photoshop.',
+    'how.3t': 'Open the panel', 'how.3d': 'Window → Extensions → Perspective Grid.',
+    'how.4t': 'Apply and draw', 'how.4d': 'Set the camera, click "Apply to layer" and draw over it.',
+    'tour.label': 'See it in action', 'tour.title': 'Meet every panel screen', 'tour.desc': 'Clear, bilingual and made for artists.',
+    'tour.prev': 'Previous screen', 'tour.next': 'Next screen',
+    'tour.1n': '01 / 05 · Camera', 'tour.1t': 'The camera in your hand', 'tour.1d': 'Pick the perspective and lens, orbit by dragging the preview and watch the grid change live. Rotation and tilt also take exact numbers.', 'tour.1a': 'Lens 10–300 mm', 'tour.1b': 'Scene zoom', 'tour.1c': 'Roll',
+    'tour.2n': '02 / 05 · Grid', 'tour.2t': 'Lines your way', 'tour.2d': 'Vanishing rays, spatial mesh or aligned floor. Gray, black or per-axis colored lines, with count, opacity and thickness.', 'tour.2a': '3 constructions', 'tour.2b': 'Per-axis colors', 'tour.2c': 'Vanishing points',
+    'tour.3n': '03 / 05 · Model', 'tour.3t': 'Scale and depth before the first stroke', 'tour.3d': 'Box, table, room or character, with shaded volume. Move the model on the plane, in depth toward a vanishing point, or by X, Y and Z.', 'tour.3a': '4 models', 'tour.3b': 'Shift + Alt moves', 'tour.3c': 'Shift + Alt + Z centers',
+    'tour.4n': '04 / 05 · Fisheye', 'tour.4t': 'Lens distortion without the math', 'tour.4d': 'At 10 mm the lens reaches the frame corners. Raise the millimeters to crop in tighter. Grid and model curve together.', 'tour.4a': 'Full frame', 'tour.4b': 'Curved guides', 'tour.4c': 'Shift + wheel = mm',
+    'tour.5n': '05 / 05 · Expanded preview', 'tour.5t': 'The scene at panel size', 'tour.5d': 'Click the corner button and hide every control. It still orbits, zooms and all. Esc brings it back.', 'tour.5a': 'Demos', 'tour.5b': 'Esc returns',
+    'keys.label': 'Shortcuts', 'keys.title': 'All on the mouse, no menu hunting', 'keys.desc': 'The gestures work over the panel preview.',
+    'keys.orbit': 'Orbit the camera', 'keys.pan': 'Reposition the scene', 'keys.zoom': 'Scene zoom', 'keys.lens': 'Change the lens (mm)', 'keys.move': 'Move the model', 'keys.center': 'Center the model',
+    'keys.drag': 'Drag', 'keys.rmb': 'Right click', 'keys.wheel': 'Wheel',
+    'req.title': 'System requirements', 'req.sys': 'System', 'req.ps': 'CC 2018 or newer', 'req.inst': 'Installer', 'req.instVal': '~100 KB, no admin',
+    'get.ver': 'Version ' + VERSION + ' for Windows', 'get.title': 'Ready to draw in perspective?', 'get.sub': 'One-time payment. Install and use in your Photoshop.',
+    'get.inc1': 'Installer for Photoshop CC 2018 or newer', 'get.inc2': 'Update notices right inside the panel', 'get.inc3': 'Support by email',
+    'get.buy': 'Buy Perspective Grid', 'get.secure': 'Secure checkout via Eduzz: Pix, card or boleto.',
+    'price.note': 'one-time payment',
+    'sup.label': 'Support', 'sup.title': 'Hit a problem or have a question?', 'sup.desc': 'Describe it below and, if you can, send a screenshot link. I reply as fast as I can.',
+    'sup.sent': 'Message sent. Thank you! I will reply to your email.',
+    'sup.name': 'Your name', 'sup.namePh': 'What should I call you?', 'sup.email': 'Your email', 'sup.emailPh': 'So I can reply',
+    'sup.psver': 'Photoshop version', 'sup.select': 'Select...', 'sup.other': 'Other',
+    'sup.msg': 'Message', 'sup.msgPh': 'What happened? What did you expect? Any error message?',
+    'sup.shot': 'Screenshot link (optional)', 'sup.shotPh': 'Paste an image link (imgur, Google Drive...)', 'sup.shotHint': 'Tip: upload the image to imgur.com or paste.pics and paste the link here.', 'sup.send': 'Send message',
+    'faq.label': 'Frequently asked', 'faq.title': 'Common questions',
+    'faq.q1': 'Does it work with my Photoshop?', 'faq.a1': 'It works on Photoshop CC 2018 or newer, on Windows 10 and 11. After installing, open it in Window → Extensions → Perspective Grid.',
+    'faq.q2': 'Does it touch my artwork layers?', 'faq.a2': 'No. The grid lives on its own layer, named "Perspective Grid". Clicking "Apply to layer" again redraws the same layer, and a Ctrl+Z undoes it.',
+    'faq.q3': 'How do I get the plugin after buying?', 'faq.a3': 'Eduzz releases the installer download as soon as payment clears. It is an .exe file: two clicks, no admin needed, then just restart Photoshop.',
+    'faq.q4': 'What about new versions?', 'faq.a4': 'The panel itself notifies you and shows what changed. The "Download" button opens the new installer, and you can also click "Check for updates" in the panel footer.',
+    'faq.q5': 'Do I need internet to use it?', 'faq.a5': 'No. The internet is only used to check for a new version. The grid is generated on your computer.',
+    'faq.q6': 'Does it work on Mac?', 'faq.a6': 'Not yet. For now the installer is Windows only.',
+    'xui.title': 'Any questions before buying? 👀', 'xui.desc': 'Send me a message through the support form. I answer it myself! ♥', 'xui.btn': 'Talk to me'
+  }
+};
+
+const TEMPLATE = fs.readFileSync(path.join(__dirname, 'page.html'), 'utf8');
+
+function render(lang, opts) {
+  const dict = STRINGS[lang];
+  const price = lang === 'pt' ? CONFIG.pricePt : CONFIG.priceEn;
+  const priceBlock = price
+    ? `<div class="pgr-price">${esc(price)}</div>\n        <div class="pgr-price-note">${esc(dict['price.note'])}</div>`
     : '';
-  const html = fs.readFileSync(path.join(__dirname, 'page.html'), 'utf8')
-    .split('{{IMG}}').join(imgBase)
-    .split('{{CHECKOUT}}').join(esc(CONFIG.checkout))
+  let html = TEMPLATE
+    .split('{{IMG}}').join(opts.imgBase)
+    .split('{{CHECKOUT}}').join(esc(lang === 'pt' ? CONFIG.checkoutPt : CONFIG.checkoutEn))
     .split('{{PRICE_BLOCK}}').join(priceBlock)
     .split('{{VERSION}}').join(esc(VERSION))
-    .split('{{PAGE_URL}}').join(esc(CONFIG.pageUrl))
-    .split('{{SUPPORT_EMAIL}}').join(esc(CONFIG.supportEmail));
+    .split('{{PAGE_URL}}').join(esc(lang === 'pt' ? CONFIG.pageUrlPt : CONFIG.pageUrlEn))
+    .split('{{SUPPORT_EMAIL}}').join(esc(CONFIG.supportEmail))
+    .split('{{HERO}}').join(lang === 'en' ? 'hero-en.jpg' : 'hero.jpg')
+    .split('{{LANG_LINKS}}').join(opts.langLinks);
+  // Textos do dicionário: hero.title e price são HTML; o resto é escapado.
+  const rawKeys = { 'hero.title': 1 };
+  html = html.replace(/\{\{t\.([a-zA-Z0-9.]+)\}\}/g, (m, key) => {
+    if (!(key in dict)) throw new Error(`[${lang}] falta a chave de texto: ${key}`);
+    return rawKeys[key] ? dict[key] : esc(dict[key]);
+  });
   const left = html.match(/\{\{[A-Z_]+\}\}/g);
   if (left) throw new Error('marcadores sem valor: ' + [...new Set(left)].join(', '));
   return html;
@@ -54,32 +202,39 @@ function render(imgBase) {
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(path.join(OUT, 'img'), { recursive: true });
 
-const snippet = render(CONFIG.imgBase);
-fs.writeFileSync(path.join(OUT, 'perspectivegrid-elementor.html'), snippet);
+// Links de troca de idioma (apontam para as páginas publicadas).
+const langLinks = active =>
+  `<a href="${esc(CONFIG.pageUrlPt)}"${active === 'pt' ? ' class="active"' : ''}>PT</a>` +
+  `<a href="${esc(CONFIG.pageUrlEn)}"${active === 'en' ? ' class="active"' : ''}>EN</a>`;
 
-const preview = [
-  '<!doctype html>',
-  '<html lang="pt-BR">',
-  '<head>',
-  '<meta charset="utf-8">',
-  '<meta name="viewport" content="width=device-width, initial-scale=1">',
-  '<title>Perspective Grid · XuimArt</title>',
-  '<meta name="description" content="Plugin para Photoshop que monta grades de perspectiva de 1, 2 e 3 pontos, olho de peixe e isométrica numa camada do documento.">',
-  '<style>html,body{margin:0;background:#0a0a0f;}html{scroll-behavior:smooth;}</style>',
-  '</head>',
-  '<body>',
-  render('img/'),
-  '</body>',
-  '</html>',
-  ''
-].join('\n');
-fs.writeFileSync(path.join(OUT, 'preview.html'), preview);
+const builds = [
+  { lang: 'pt', snippet: 'perspectivegrid-elementor.html', preview: 'preview.html', titleTag: 'Perspective Grid · XuimArt', desc: STRINGS.pt['hero.desc'] },
+  { lang: 'en', snippet: 'perspectivegrid-elementor-en.html', preview: 'preview-en.html', titleTag: 'Perspective Grid · XuimArt', desc: STRINGS.en['hero.desc'] }
+];
 
-// Copia só as imagens que a página realmente usa e confere se todas existem.
-const used = [...new Set([...snippet.matchAll(/(?:src|srcset)="([^"]+)"/g)]
-  .map(m => m[1]).filter(u => u.startsWith(CONFIG.imgBase)).map(u => u.slice(CONFIG.imgBase.length)))];
+const usedImgs = new Set();
+for (const b of builds) {
+  const snippet = render(b.lang, { imgBase: CONFIG.imgBase, langLinks: langLinks(b.lang) });
+  fs.writeFileSync(path.join(OUT, b.snippet), snippet);
+  [...snippet.matchAll(/(?:src|srcset)="([^"]+)"/g)]
+    .map(m => m[1]).filter(u => u.startsWith(CONFIG.imgBase))
+    .forEach(u => usedImgs.add(u.slice(CONFIG.imgBase.length)));
+
+  // Preview local: as imagens vêm da pasta img/ ao lado.
+  const localSnippet = render(b.lang, { imgBase: 'img/', langLinks:
+    `<a href="preview.html"${b.lang === 'pt' ? ' class="active"' : ''}>PT</a><a href="preview-en.html"${b.lang === 'en' ? ' class="active"' : ''}>EN</a>` });
+  const preview = [
+    '<!doctype html>', `<html lang="${b.lang === 'pt' ? 'pt-BR' : 'en'}">`, '<head>', '<meta charset="utf-8">',
+    '<meta name="viewport" content="width=device-width, initial-scale=1">',
+    `<title>${b.titleTag}</title>`, `<meta name="description" content="${esc(b.desc)}">`,
+    '<style>html,body{margin:0;background:#0a0a0f;}html{scroll-behavior:smooth;}</style>',
+    '</head>', '<body>', localSnippet, '</body>', '</html>', ''
+  ].join('\n');
+  fs.writeFileSync(path.join(OUT, b.preview), preview);
+}
+
 let bytes = 0;
-for (const name of used) {
+for (const name of usedImgs) {
   const src = path.join(__dirname, 'img', name);
   if (!fs.existsSync(src)) throw new Error('imagem não encontrada: site/img/' + name);
   fs.copyFileSync(src, path.join(OUT, 'img', name));
@@ -87,8 +242,10 @@ for (const name of used) {
 }
 
 console.log(`versão   : ${VERSION}`);
-console.log(`elementor: ${path.relative(ROOT, path.join(OUT, 'perspectivegrid-elementor.html'))} (${(snippet.length / 1024).toFixed(0)} KB)`);
-console.log(`preview  : ${path.relative(ROOT, path.join(OUT, 'preview.html'))}`);
-console.log(`imagens  : ${used.length} arquivos, ${(bytes / 1024).toFixed(0)} KB -> subir em ${CONFIG.imgBase}`);
-if (/COLOQUE/.test(CONFIG.checkout)) console.log('AVISO    : link do checkout ainda é o provisório (use --checkout=URL)');
-if (!CONFIG.price) console.log('AVISO    : sem preço no card de compra (use --price="R$ 00,00")');
+console.log(`PT       : ${path.relative(ROOT, path.join(OUT, 'perspectivegrid-elementor.html'))}`);
+console.log(`EN       : ${path.relative(ROOT, path.join(OUT, 'perspectivegrid-elementor-en.html'))}`);
+console.log(`preview  : dist/site/preview.html  ·  dist/site/preview-en.html`);
+console.log(`imagens  : ${usedImgs.size} arquivos, ${(bytes / 1024).toFixed(0)} KB -> subir em ${CONFIG.imgBase}`);
+if (/COLOQUE/.test(CONFIG.checkoutPt)) console.log('AVISO    : checkout PT ainda provisório (--checkout=URL)');
+if (!CONFIG.pricePt) console.log('AVISO    : sem preço PT (--price="R$ 00,00")');
+if (!CONFIG.priceEn) console.log('AVISO    : sem preço EN (--price-en="$0.00")');

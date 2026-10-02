@@ -1,7 +1,8 @@
 <!--
   Perspective Grid: página de venda (bloco para o widget HTML do Elementor).
   Mesma identidade da página do DrawlapsePS (cores, fontes, cards, botões).
-  NÃO edite os {{...}}: o site/build-site.cjs troca pelos valores da config.
+  Os {{...}} são trocados pelo site/build-site.cjs:
+   - marcadores de config e os textos "t ponto chave" vêm do dicionário em build-site.cjs
 -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&display=swap">
@@ -175,6 +176,12 @@
 .pgr-faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease,padding .3s;font-size:.85rem;color:var(--td);line-height:1.65;}
 .pgr-faq-item.open .pgr-faq-a{max-height:320px;padding:0 1.25rem 1.1rem;}
 
+/* IDIOMA */
+.pgr-lang{position:absolute;top:1rem;right:1rem;z-index:5;display:flex;gap:4px;}
+.pgr-lang a{font-size:.72rem;font-weight:700;letter-spacing:.04em;color:var(--td);border:1px solid var(--b);border-radius:100px;padding:4px 10px;background:rgba(10,10,15,.5);}
+.pgr-lang a.active{color:#fff;background:var(--r);border-color:var(--r);}
+.pgr-lang a:hover{color:var(--t);border-color:rgba(222,34,70,.5);}
+
 /* XUIMZINHO */
 .pgr-xui{display:flex;align-items:flex-end;justify-content:center;gap:1.5rem;flex-wrap:wrap;}
 .pgr-xui img{width:clamp(130px,18vw,190px);height:auto;display:block;filter:drop-shadow(0 4px 20px rgba(222,34,70,.3));animation:pgrFloat 3.5s ease-in-out infinite;}
@@ -190,6 +197,9 @@
 
 <div class="pgr-embed" id="pgrEmbed">
 
+  <!-- Troca de idioma: leva à outra página (PT/EN) -->
+  <div class="pgr-lang">{{LANG_LINKS}}</div>
+
   <!-- HERO -->
   <section class="pgr-hero">
     <div class="pgr-hero-bg"></div>
@@ -197,20 +207,20 @@
     <div class="pgr-hero-floor" aria-hidden="true"></div>
     <div class="pgr-hero-inner">
       <div>
-        <div class="pgr-badge"><span class="pgr-dot"></span> Plugin para Photoshop · v{{VERSION}}</div>
-        <h1>Perspectiva certa,<br><em>em segundos</em></h1>
-        <p class="pgr-hero-desc">Monte grades de 1, 2 e 3 pontos, olho de peixe e isométrica direto no Photoshop. A grade vai para uma camada própria, pronta para você desenhar por cima.</p>
+        <div class="pgr-badge"><span class="pgr-dot"></span> {{t.hero.badge}} · v{{VERSION}}</div>
+        <h1>{{t.hero.title}}</h1>
+        <p class="pgr-hero-desc">{{t.hero.desc}}</p>
         <div class="pgr-hero-actions">
           <a href="{{CHECKOUT}}" class="pgr-btn pgr-btn-primary pgr-btn-lg" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L5 3H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
-            Comprar agora
+            {{t.hero.buy}}
           </a>
-          <a href="#pgr-tour" class="pgr-btn pgr-btn-secondary">Ver o painel</a>
+          <a href="#pgr-tour" class="pgr-btn pgr-btn-secondary">{{t.hero.tour}}</a>
         </div>
-        <p class="pgr-hero-note">Windows · Photoshop CC 2018 ou mais recente</p>
+        <p class="pgr-hero-note">{{t.hero.note}}</p>
       </div>
       <div class="pgr-hero-shot">
-        <img src="{{IMG}}hero.jpg" width="1200" height="800" alt="Painel do Perspective Grid ao lado de uma cena de quarto desenhada sobre a grade de perspectiva">
+        <img src="{{IMG}}{{HERO}}" width="1200" height="800" alt="{{t.hero.shotAlt}}">
       </div>
     </div>
   </section>
@@ -220,18 +230,18 @@
   <!-- FUNCIONALIDADES -->
   <section class="pgr-section pgr-alt">
     <div class="pgr-wrap-lg">
-      <div class="pgr-section-label">Funcionalidades</div>
-      <h2 class="pgr-section-title">Tudo para montar a perspectiva da sua cena</h2>
-      <p class="pgr-section-desc">Nada de puxar linhas de fuga na mão, régua por régua. Escolha a câmera, ajuste no preview e aplique.</p>
+      <div class="pgr-section-label">{{t.feat.label}}</div>
+      <h2 class="pgr-section-title">{{t.feat.title}}</h2>
+      <p class="pgr-section-desc">{{t.feat.desc}}</p>
       <div class="pgr-feat-grid">
-        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9h20"/><path d="M12 9L3 21M12 9l-4 12M12 9l4 12M12 9l9 12"/></svg></div><h3>Todas as perspectivas</h3><p>Livre, 1 ponto, 2 pontos, 3 pontos, olho de peixe e ortográfica.</p></div>
-        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v5M21 12h-5"/></svg></div><h3>Lente de verdade</h3><p>De 10 a 300 mm. Segure Shift e gire a roda do mouse para trocar a lente na hora.</p><span class="pgr-new-tag">Novo</span></div>
-        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 12q9-6 18 0M3 12q9 6 18 0M12 4q-5 8 0 16M12 4q5 8 0 16"/></svg></div><h3>Olho de peixe</h3><p>Preenche a cena inteira, e as guias e o modelo curvam como numa lente real.</p><span class="pgr-new-tag">Novo</span></div>
-        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12L4 7.5M12 12v9"/></svg></div><h3>Vistas prontas</h3><p>Isométrica, dimétrica, trimétrica, frente, lado e topo, com um clique.</p></div>
-        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/><path d="M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg></div><h3>Controle no preview</h3><p>Arraste para girar a câmera, botão direito para reposicionar e roda do mouse para o zoom.</p></div>
-        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.2"/><path d="M12 7.5v7M8 10h8M12 14.5l-3 6M12 14.5l3 6"/></svg></div><h3>Modelos de referência</h3><p>Caixa, mesa, quarto e personagem para sentir escala. Shift + Alt + arrastar move o modelo.</p><span class="pgr-new-tag">Novo</span></div>
-        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></div><h3>Camada própria</h3><p>A grade vai para a camada "Perspective Grid", no tamanho do documento. Ctrl+Z desfaz.</p></div>
-        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></div><h3>Preview ampliado</h3><p>Um botão no canto leva a cena para o painel inteiro. Ótimo para estudar e demonstrar.</p><span class="pgr-new-tag">Novo</span></div>
+        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9h20"/><path d="M12 9L3 21M12 9l-4 12M12 9l4 12M12 9l9 12"/></svg></div><h3>{{t.feat.1t}}</h3><p>{{t.feat.1d}}</p></div>
+        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/><path d="M12 3v5M21 12h-5"/></svg></div><h3>{{t.feat.2t}}</h3><p>{{t.feat.2d}}</p><span class="pgr-new-tag">{{t.new}}</span></div>
+        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 12q9-6 18 0M3 12q9 6 18 0M12 4q-5 8 0 16M12 4q5 8 0 16"/></svg></div><h3>{{t.feat.3t}}</h3><p>{{t.feat.3d}}</p><span class="pgr-new-tag">{{t.new}}</span></div>
+        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12L4 7.5M12 12v9"/></svg></div><h3>{{t.feat.4t}}</h3><p>{{t.feat.4d}}</p></div>
+        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M3 12h18"/><path d="M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3"/></svg></div><h3>{{t.feat.5t}}</h3><p>{{t.feat.5d}}</p></div>
+        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="5" r="2.2"/><path d="M12 7.5v7M8 10h8M12 14.5l-3 6M12 14.5l3 6"/></svg></div><h3>{{t.feat.6t}}</h3><p>{{t.feat.6d}}</p><span class="pgr-new-tag">{{t.new}}</span></div>
+        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></svg></div><h3>{{t.feat.7t}}</h3><p>{{t.feat.7d}}</p></div>
+        <div class="pgr-feat-card"><div class="pgr-feat-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg></div><h3>{{t.feat.8t}}</h3><p>{{t.feat.8d}}</p><span class="pgr-new-tag">{{t.new}}</span></div>
       </div>
     </div>
   </section>
@@ -241,21 +251,21 @@
   <!-- TIPOS DE PERSPECTIVA (imagens geradas pelo próprio plugin) -->
   <section class="pgr-section">
     <div class="pgr-wrap-lg pgr-center">
-      <div class="pgr-section-label">Tipos de perspectiva</div>
-      <h2 class="pgr-section-title">Uma grade para cada cena</h2>
-      <p class="pgr-section-desc">Todas as imagens abaixo saíram do próprio Perspective Grid, sem retoque.</p>
+      <div class="pgr-section-label">{{t.types.label}}</div>
+      <h2 class="pgr-section-title">{{t.types.title}}</h2>
+      <p class="pgr-section-desc">{{t.types.desc}}</p>
       <div class="pgr-types">
-        <figure class="pgr-type"><img src="{{IMG}}scene-one.svg" loading="lazy" alt="Quarto em perspectiva de 1 ponto, com as linhas convergindo para o centro"><figcaption><strong>1 ponto</strong><span>Corredores, ruas e cenas de frente.</span></figcaption></figure>
-        <figure class="pgr-type"><img src="{{IMG}}scene-two.svg" loading="lazy" alt="Quarto em perspectiva de 2 pontos, visto pela quina"><figcaption><strong>2 pontos</strong><span>Ambientes e prédios vistos pela quina.</span></figcaption></figure>
-        <figure class="pgr-type"><img src="{{IMG}}scene-three.svg" loading="lazy" alt="Mesa em perspectiva de 3 pontos, vista de cima"><figcaption><strong>3 pontos</strong><span>Vistas de cima ou de baixo, com mais drama.</span></figcaption></figure>
-        <figure class="pgr-type"><img src="{{IMG}}scene-fisheye.svg" loading="lazy" alt="Quarto em olho de peixe, com as guias curvas"><figcaption><strong>Olho de peixe</strong><span>Lente de 10 mm preenchendo o quadro inteiro.</span></figcaption></figure>
-        <figure class="pgr-type"><img src="{{IMG}}scene-iso.svg" loading="lazy" alt="Mesa em projeção isométrica"><figcaption><strong>Isométrica</strong><span>Sem pontos de fuga: games, diagramas e mapas.</span></figcaption></figure>
-        <figure class="pgr-type"><img src="{{IMG}}scene-person.svg" loading="lazy" alt="Personagem de referência em pé sobre a grade"><figcaption><strong>Escala com personagem</strong><span>Um boneco de referência para acertar o tamanho das coisas.</span></figcaption></figure>
+        <figure class="pgr-type"><img src="{{IMG}}scene-one.svg" loading="lazy" alt="{{t.types.1t}}"><figcaption><strong>{{t.types.1t}}</strong><span>{{t.types.1d}}</span></figcaption></figure>
+        <figure class="pgr-type"><img src="{{IMG}}scene-two.svg" loading="lazy" alt="{{t.types.2t}}"><figcaption><strong>{{t.types.2t}}</strong><span>{{t.types.2d}}</span></figcaption></figure>
+        <figure class="pgr-type"><img src="{{IMG}}scene-three.svg" loading="lazy" alt="{{t.types.3t}}"><figcaption><strong>{{t.types.3t}}</strong><span>{{t.types.3d}}</span></figcaption></figure>
+        <figure class="pgr-type"><img src="{{IMG}}scene-fisheye.svg" loading="lazy" alt="{{t.types.4t}}"><figcaption><strong>{{t.types.4t}}</strong><span>{{t.types.4d}}</span></figcaption></figure>
+        <figure class="pgr-type"><img src="{{IMG}}scene-iso.svg" loading="lazy" alt="{{t.types.5t}}"><figcaption><strong>{{t.types.5t}}</strong><span>{{t.types.5d}}</span></figcaption></figure>
+        <figure class="pgr-type"><img src="{{IMG}}scene-person.svg" loading="lazy" alt="{{t.types.6t}}"><figcaption><strong>{{t.types.6t}}</strong><span>{{t.types.6d}}</span></figcaption></figure>
       </div>
-      <div class="pgr-axes" aria-label="Cores das linhas por eixo">
-        <span><i style="background:var(--cx)"></i>Eixo X</span>
-        <span><i style="background:var(--cy)"></i>Eixo Y</span>
-        <span><i style="background:var(--cz)"></i>Eixo Z</span>
+      <div class="pgr-axes" aria-label="{{t.types.axes}}">
+        <span><i style="background:var(--cx)"></i>{{t.types.axisX}}</span>
+        <span><i style="background:var(--cy)"></i>{{t.types.axisY}}</span>
+        <span><i style="background:var(--cz)"></i>{{t.types.axisZ}}</span>
       </div>
     </div>
   </section>
@@ -265,16 +275,16 @@
   <!-- COMO FUNCIONA -->
   <section class="pgr-section pgr-alt">
     <div class="pgr-wrap pgr-center">
-      <div class="pgr-section-label">Como funciona</div>
-      <h2 class="pgr-section-title">Simples assim</h2>
-      <p class="pgr-section-desc">Da compra à primeira grade em poucos minutos.</p>
+      <div class="pgr-section-label">{{t.how.label}}</div>
+      <h2 class="pgr-section-title">{{t.how.title}}</h2>
+      <p class="pgr-section-desc">{{t.how.desc}}</p>
     </div>
     <div class="pgr-wrap-lg">
       <div class="pgr-steps">
-        <div class="pgr-step"><div class="pgr-step-num">1</div><h3>Compre e baixe</h3><p>Pagamento seguro pela Eduzz. Você recebe o instalador .exe.</p></div>
-        <div class="pgr-step"><div class="pgr-step-num">2</div><h3>Instale</h3><p>Dois cliques, sem pedir administrador. Depois reinicie o Photoshop.</p></div>
-        <div class="pgr-step"><div class="pgr-step-num">3</div><h3>Abra o painel</h3><p>Janela → Extensões → Perspective Grid.</p></div>
-        <div class="pgr-step"><div class="pgr-step-num">4</div><h3>Aplique e desenhe</h3><p>Ajuste a câmera, clique em "Aplicar na camada" e desenhe por cima.</p></div>
+        <div class="pgr-step"><div class="pgr-step-num">1</div><h3>{{t.how.1t}}</h3><p>{{t.how.1d}}</p></div>
+        <div class="pgr-step"><div class="pgr-step-num">2</div><h3>{{t.how.2t}}</h3><p>{{t.how.2d}}</p></div>
+        <div class="pgr-step"><div class="pgr-step-num">3</div><h3>{{t.how.3t}}</h3><p>{{t.how.3d}}</p></div>
+        <div class="pgr-step"><div class="pgr-step-num">4</div><h3>{{t.how.4t}}</h3><p>{{t.how.4d}}</p></div>
       </div>
     </div>
   </section>
@@ -285,57 +295,57 @@
   <section class="pgr-section" id="pgr-tour">
     <div class="pgr-wrap-lg">
       <div class="pgr-center">
-        <div class="pgr-section-label">Veja na prática</div>
-        <h2 class="pgr-section-title">Conheça cada tela do painel</h2>
-        <p class="pgr-section-desc">Direto, em português e pensado para artistas.</p>
+        <div class="pgr-section-label">{{t.tour.label}}</div>
+        <h2 class="pgr-section-title">{{t.tour.title}}</h2>
+        <p class="pgr-section-desc">{{t.tour.desc}}</p>
       </div>
       <div class="pgr-car-layout">
         <div>
           <div class="pgr-car-texts" id="pgrCarTexts" aria-live="polite">
             <div class="pgr-car-text active">
-              <div class="pgr-car-num">01 / 05 · Câmera</div>
-              <h3>A câmera na palma da mão</h3>
-              <p>Escolha a perspectiva e a lente, gire arrastando no preview e veja a grade mudar ao vivo. Rotação e inclinação também aceitam números exatos.</p>
-              <div class="pgr-car-tags"><span class="pgr-car-tag">Lente 10–300 mm</span><span class="pgr-car-tag">Zoom da cena</span><span class="pgr-car-tag">Roll</span></div>
+              <div class="pgr-car-num">{{t.tour.1n}}</div>
+              <h3>{{t.tour.1t}}</h3>
+              <p>{{t.tour.1d}}</p>
+              <div class="pgr-car-tags"><span class="pgr-car-tag">{{t.tour.1a}}</span><span class="pgr-car-tag">{{t.tour.1b}}</span><span class="pgr-car-tag">{{t.tour.1c}}</span></div>
             </div>
             <div class="pgr-car-text">
-              <div class="pgr-car-num">02 / 05 · Grade</div>
-              <h3>As linhas do seu jeito</h3>
-              <p>Raios de fuga, malha espacial ou chão alinhado. Linhas cinza, pretas ou coloridas por eixo, com quantidade, opacidade e espessura.</p>
-              <div class="pgr-car-tags"><span class="pgr-car-tag">3 construções</span><span class="pgr-car-tag">Cores por eixo</span><span class="pgr-car-tag">Pontos de fuga</span></div>
+              <div class="pgr-car-num">{{t.tour.2n}}</div>
+              <h3>{{t.tour.2t}}</h3>
+              <p>{{t.tour.2d}}</p>
+              <div class="pgr-car-tags"><span class="pgr-car-tag">{{t.tour.2a}}</span><span class="pgr-car-tag">{{t.tour.2b}}</span><span class="pgr-car-tag">{{t.tour.2c}}</span></div>
             </div>
             <div class="pgr-car-text">
-              <div class="pgr-car-num">03 / 05 · Modelo</div>
-              <h3>Escala e profundidade antes do primeiro traço</h3>
-              <p>Caixa, mesa, quarto ou personagem, com volume sombreado. Mova o modelo no plano, em profundidade na direção de um ponto de fuga ou por X, Y e Z.</p>
-              <div class="pgr-car-tags"><span class="pgr-car-tag">4 modelos</span><span class="pgr-car-tag">Shift + Alt move</span><span class="pgr-car-tag">Shift + Alt + Z centraliza</span></div>
+              <div class="pgr-car-num">{{t.tour.3n}}</div>
+              <h3>{{t.tour.3t}}</h3>
+              <p>{{t.tour.3d}}</p>
+              <div class="pgr-car-tags"><span class="pgr-car-tag">{{t.tour.3a}}</span><span class="pgr-car-tag">{{t.tour.3b}}</span><span class="pgr-car-tag">{{t.tour.3c}}</span></div>
             </div>
             <div class="pgr-car-text">
-              <div class="pgr-car-num">04 / 05 · Olho de peixe</div>
-              <h3>Distorção de lente sem fazer conta</h3>
-              <p>A 10 mm a lente alcança os cantos do quadro. Aumente os milímetros para fechar o recorte. A grade e o modelo curvam juntos.</p>
-              <div class="pgr-car-tags"><span class="pgr-car-tag">Tela cheia</span><span class="pgr-car-tag">Guias curvas</span><span class="pgr-car-tag">Shift + roda = mm</span></div>
+              <div class="pgr-car-num">{{t.tour.4n}}</div>
+              <h3>{{t.tour.4t}}</h3>
+              <p>{{t.tour.4d}}</p>
+              <div class="pgr-car-tags"><span class="pgr-car-tag">{{t.tour.4a}}</span><span class="pgr-car-tag">{{t.tour.4b}}</span><span class="pgr-car-tag">{{t.tour.4c}}</span></div>
             </div>
             <div class="pgr-car-text">
-              <div class="pgr-car-num">05 / 05 · Preview ampliado</div>
-              <h3>A cena do tamanho do painel</h3>
-              <p>Clique no botão do canto do preview e esconda todos os controles. Continua girando, com zoom e tudo. O Esc volta.</p>
-              <div class="pgr-car-tags"><span class="pgr-car-tag">Demonstrações</span><span class="pgr-car-tag">Esc volta</span></div>
+              <div class="pgr-car-num">{{t.tour.5n}}</div>
+              <h3>{{t.tour.5t}}</h3>
+              <p>{{t.tour.5d}}</p>
+              <div class="pgr-car-tags"><span class="pgr-car-tag">{{t.tour.5a}}</span><span class="pgr-car-tag">{{t.tour.5b}}</span></div>
             </div>
           </div>
           <div class="pgr-car-nav">
-            <button type="button" class="pgr-car-btn" id="pgrPrev" aria-label="Tela anterior">&#8592;</button>
+            <button type="button" class="pgr-car-btn" id="pgrPrev" aria-label="{{t.tour.prev}}">&#8592;</button>
             <div class="pgr-car-dots" id="pgrDots"></div>
-            <button type="button" class="pgr-car-btn" id="pgrNext" aria-label="Próxima tela">&#8594;</button>
+            <button type="button" class="pgr-car-btn" id="pgrNext" aria-label="{{t.tour.next}}">&#8594;</button>
           </div>
         </div>
         <div class="pgr-car-imgs">
           <div class="pgr-car-track" id="pgrTrack">
-            <div class="pgr-car-item"><img src="{{IMG}}panel-camera.png" width="340" height="680" alt="Aba Câmera do painel: perspectiva, lente, rotação e distância focal"></div>
-            <div class="pgr-car-item"><img src="{{IMG}}panel-grid.png" width="340" height="680" loading="lazy" alt="Aba Grade do painel: construção, estilo, número de guias por eixo, opacidade e espessura"></div>
-            <div class="pgr-car-item"><img src="{{IMG}}panel-model.png" width="340" height="680" loading="lazy" alt="Aba Modelo do painel com o personagem de referência"></div>
-            <div class="pgr-car-item"><img src="{{IMG}}panel-fisheye.png" width="340" height="680" loading="lazy" alt="Painel no modo olho de peixe com lente de 10 mm"></div>
-            <div class="pgr-car-item"><img src="{{IMG}}panel-expanded.png" width="640" height="400" loading="lazy" alt="Preview ampliado ocupando o painel inteiro"></div>
+            <div class="pgr-car-item"><img src="{{IMG}}panel-camera.png" width="340" height="680" alt="{{t.tour.1t}}"></div>
+            <div class="pgr-car-item"><img src="{{IMG}}panel-grid.png" width="340" height="680" loading="lazy" alt="{{t.tour.2t}}"></div>
+            <div class="pgr-car-item"><img src="{{IMG}}panel-model.png" width="340" height="680" loading="lazy" alt="{{t.tour.3t}}"></div>
+            <div class="pgr-car-item"><img src="{{IMG}}panel-fisheye.png" width="340" height="680" loading="lazy" alt="{{t.tour.4t}}"></div>
+            <div class="pgr-car-item"><img src="{{IMG}}panel-expanded.png" width="640" height="400" loading="lazy" alt="{{t.tour.5t}}"></div>
           </div>
         </div>
       </div>
@@ -347,16 +357,16 @@
   <!-- ATALHOS -->
   <section class="pgr-section pgr-alt">
     <div class="pgr-wrap">
-      <div class="pgr-section-label">Atalhos</div>
-      <h2 class="pgr-section-title">Tudo no mouse, sem caçar menu</h2>
-      <p class="pgr-section-desc">Os gestos funcionam em cima do preview do painel.</p>
+      <div class="pgr-section-label">{{t.keys.label}}</div>
+      <h2 class="pgr-section-title">{{t.keys.title}}</h2>
+      <p class="pgr-section-desc">{{t.keys.desc}}</p>
       <div class="pgr-keys">
-        <div class="pgr-key"><b>Girar a câmera</b><span class="pgr-kbd"><kbd>Arrastar</kbd></span></div>
-        <div class="pgr-key"><b>Reposicionar a cena</b><span class="pgr-kbd"><kbd>Botão direito</kbd></span></div>
-        <div class="pgr-key"><b>Zoom da cena</b><span class="pgr-kbd"><kbd>Roda</kbd></span></div>
-        <div class="pgr-key"><b>Trocar a lente (mm)</b><span class="pgr-kbd"><kbd>Shift</kbd>+<kbd>Roda</kbd></span></div>
-        <div class="pgr-key"><b>Mover o modelo</b><span class="pgr-kbd"><kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>Arrastar</kbd></span></div>
-        <div class="pgr-key"><b>Centralizar o modelo</b><span class="pgr-kbd"><kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>Z</kbd></span></div>
+        <div class="pgr-key"><b>{{t.keys.orbit}}</b><span class="pgr-kbd"><kbd>{{t.keys.drag}}</kbd></span></div>
+        <div class="pgr-key"><b>{{t.keys.pan}}</b><span class="pgr-kbd"><kbd>{{t.keys.rmb}}</kbd></span></div>
+        <div class="pgr-key"><b>{{t.keys.zoom}}</b><span class="pgr-kbd"><kbd>{{t.keys.wheel}}</kbd></span></div>
+        <div class="pgr-key"><b>{{t.keys.lens}}</b><span class="pgr-kbd"><kbd>Shift</kbd>+<kbd>{{t.keys.wheel}}</kbd></span></div>
+        <div class="pgr-key"><b>{{t.keys.move}}</b><span class="pgr-kbd"><kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>{{t.keys.drag}}</kbd></span></div>
+        <div class="pgr-key"><b>{{t.keys.center}}</b><span class="pgr-kbd"><kbd>Shift</kbd>+<kbd>Alt</kbd>+<kbd>Z</kbd></span></div>
       </div>
     </div>
   </section>
@@ -366,11 +376,11 @@
   <!-- REQUISITOS -->
   <section class="pgr-req">
     <div class="pgr-wrap">
-      <div class="pgr-req-title">Requisitos do sistema</div>
+      <div class="pgr-req-title">{{t.req.title}}</div>
       <div class="pgr-req-grid">
-        <div class="pgr-req-card"><span class="pgr-req-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg></span><div><div class="pgr-req-lbl">Sistema</div><div class="pgr-req-val">Windows 10 / 11</div></div></div>
-        <div class="pgr-req-card"><span class="pgr-req-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 16V8h3a2.5 2.5 0 010 5H8M17 9.5c-.5-.7-1.3-1-2-1-1 0-1.8.6-1.8 1.5 0 2 4 1.2 4 3.5 0 1-.9 1.6-2 1.6-.9 0-1.7-.4-2.2-1"/></svg></span><div><div class="pgr-req-lbl">Adobe Photoshop</div><div class="pgr-req-val">CC 2018 ou mais recente</div></div></div>
-        <div class="pgr-req-card"><span class="pgr-req-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg></span><div><div class="pgr-req-lbl">Instalador</div><div class="pgr-req-val">~100 KB, sem admin</div></div></div>
+        <div class="pgr-req-card"><span class="pgr-req-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg></span><div><div class="pgr-req-lbl">{{t.req.sys}}</div><div class="pgr-req-val">Windows 10 / 11</div></div></div>
+        <div class="pgr-req-card"><span class="pgr-req-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 16V8h3a2.5 2.5 0 010 5H8M17 9.5c-.5-.7-1.3-1-2-1-1 0-1.8.6-1.8 1.5 0 2 4 1.2 4 3.5 0 1-.9 1.6-2 1.6-.9 0-1.7-.4-2.2-1"/></svg></span><div><div class="pgr-req-lbl">Adobe Photoshop</div><div class="pgr-req-val">{{t.req.ps}}</div></div></div>
+        <div class="pgr-req-card"><span class="pgr-req-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></svg></span><div><div class="pgr-req-lbl">{{t.req.inst}}</div><div class="pgr-req-val">{{t.req.instVal}}</div></div></div>
       </div>
     </div>
   </section>
@@ -381,35 +391,35 @@
   <section class="pgr-section pgr-alt" id="pgr-get">
     <div class="pgr-wrap">
       <div class="pgr-get-card">
-        <div class="pgr-get-ver">Versão {{VERSION}} para Windows</div>
-        <h2>Pronto para desenhar em perspectiva?</h2>
-        <p>Pagamento único. Instale e use no seu Photoshop.</p>
+        <div class="pgr-get-ver">{{t.get.ver}}</div>
+        <h2>{{t.get.title}}</h2>
+        <p>{{t.get.sub}}</p>
         {{PRICE_BLOCK}}
         <ul class="pgr-includes">
-          <li>Instalador para Photoshop CC 2018 ou mais recente</li>
-          <li>Atualizações avisadas dentro do próprio painel</li>
-          <li>Suporte por e-mail, em português</li>
+          <li>{{t.get.inc1}}</li>
+          <li>{{t.get.inc2}}</li>
+          <li>{{t.get.inc3}}</li>
         </ul>
         <div>
           <a href="{{CHECKOUT}}" class="pgr-btn pgr-btn-primary pgr-btn-lg" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6h15l-1.5 9h-12z"/><path d="M6 6L5 3H2"/><circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/></svg>
-            Comprar o Perspective Grid
+            {{t.get.buy}}
           </a>
         </div>
-        <p class="pgr-get-secure">Pagamento seguro pela Eduzz: Pix, cartão ou boleto.</p>
+        <p class="pgr-get-secure">{{t.get.secure}}</p>
       </div>
     </div>
   </section>
 
   <div class="pgr-divider"></div>
 
-  <!-- SUPORTE (FormSubmit, igual ao DrawlapsePS) -->
+  <!-- SUPORTE (FormSubmit) -->
   <section class="pgr-section" id="pgr-suporte">
     <div class="pgr-wrap">
-      <div class="pgr-section-label">Suporte</div>
-      <h2 class="pgr-section-title">Encontrou um problema ou tem uma dúvida?</h2>
-      <p class="pgr-section-desc">Descreva abaixo e, se puder, mande um link de screenshot. Respondo o mais rápido que posso.</p>
-      <div class="pgr-sent" id="pgrSent" role="status">Mensagem enviada. Obrigado! Respondo no seu e-mail.</div>
+      <div class="pgr-section-label">{{t.sup.label}}</div>
+      <h2 class="pgr-section-title">{{t.sup.title}}</h2>
+      <p class="pgr-section-desc">{{t.sup.desc}}</p>
+      <div class="pgr-sent" id="pgrSent" role="status">{{t.sup.sent}}</div>
       <div class="pgr-form-box">
         <form class="pgr-form" action="https://formsubmit.co/{{SUPPORT_EMAIL}}" method="POST">
           <input type="hidden" name="_subject" value="Suporte - Perspective Grid">
@@ -417,27 +427,27 @@
           <input type="hidden" name="_template" value="box">
           <input type="hidden" name="_next" value="{{PAGE_URL}}?enviado=1#pgr-suporte">
           <input type="text" name="_honey" style="display:none" tabindex="-1" autocomplete="off" aria-hidden="true">
-          <div><label for="pgrNome">Seu nome</label><input id="pgrNome" type="text" name="nome" required placeholder="Como posso te chamar?" autocomplete="name"></div>
-          <div><label for="pgrEmail">Seu e-mail</label><input id="pgrEmail" type="email" name="email" required placeholder="Para eu poder responder" autocomplete="email"></div>
+          <div><label for="pgrNome">{{t.sup.name}}</label><input id="pgrNome" type="text" name="nome" required placeholder="{{t.sup.namePh}}" autocomplete="name"></div>
+          <div><label for="pgrEmail">{{t.sup.email}}</label><input id="pgrEmail" type="email" name="email" required placeholder="{{t.sup.emailPh}}" autocomplete="email"></div>
           <div>
-            <label for="pgrVersao">Versão do Photoshop</label>
+            <label for="pgrVersao">{{t.sup.psver}}</label>
             <select id="pgrVersao" name="versao_photoshop">
-              <option value="">Selecione...</option>
+              <option value="">{{t.sup.select}}</option>
               <option>Photoshop CC 2018</option><option>Photoshop CC 2019</option><option>Photoshop 2020</option>
               <option>Photoshop 2021</option><option>Photoshop 2022</option><option>Photoshop 2023</option>
               <option>Photoshop 2024</option><option>Photoshop 2025</option><option>Photoshop 2026</option>
-              <option>Outra</option>
+              <option>{{t.sup.other}}</option>
             </select>
           </div>
-          <div><label for="pgrDesc">Mensagem</label><textarea id="pgrDesc" name="mensagem" required rows="4" placeholder="O que aconteceu? O que você esperava? Apareceu alguma mensagem de erro?"></textarea></div>
+          <div><label for="pgrDesc">{{t.sup.msg}}</label><textarea id="pgrDesc" name="mensagem" required rows="4" placeholder="{{t.sup.msgPh}}"></textarea></div>
           <div>
-            <label for="pgrShot">Link do screenshot (opcional)</label>
-            <input id="pgrShot" type="url" name="screenshot_link" placeholder="Cole um link de imagem (imgur, Google Drive...)">
-            <p class="pgr-form-hint">Dica: suba a imagem no imgur.com ou paste.pics e cole o link aqui.</p>
+            <label for="pgrShot">{{t.sup.shot}}</label>
+            <input id="pgrShot" type="url" name="screenshot_link" placeholder="{{t.sup.shotPh}}">
+            <p class="pgr-form-hint">{{t.sup.shotHint}}</p>
           </div>
           <button type="submit" class="pgr-btn pgr-btn-primary">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4z"/></svg>
-            Enviar mensagem
+            {{t.sup.send}}
           </button>
         </form>
       </div>
@@ -449,15 +459,15 @@
   <!-- FAQ -->
   <section class="pgr-section pgr-alt">
     <div class="pgr-wrap">
-      <div class="pgr-section-label">Perguntas frequentes</div>
-      <h2 class="pgr-section-title">Dúvidas comuns</h2>
+      <div class="pgr-section-label">{{t.faq.label}}</div>
+      <h2 class="pgr-section-title">{{t.faq.title}}</h2>
       <div class="pgr-faq-list">
-        <div class="pgr-faq-item"><button type="button" class="pgr-faq-q" aria-expanded="false"><span>Funciona no meu Photoshop?</span><span class="pgr-faq-arrow" aria-hidden="true"></span></button><div class="pgr-faq-a">Funciona no Photoshop CC 2018 ou mais recente, no Windows 10 e 11. Depois de instalar, abra em Janela → Extensões → Perspective Grid.</div></div>
-        <div class="pgr-faq-item"><button type="button" class="pgr-faq-q" aria-expanded="false"><span>Ele mexe nas camadas da minha arte?</span><span class="pgr-faq-arrow" aria-hidden="true"></span></button><div class="pgr-faq-a">Não. A grade fica numa camada própria, chamada "Perspective Grid". Mudou a câmera? "Atualizar malha" redesenha a mesma camada, e um Ctrl+Z desfaz cada aplicação.</div></div>
-        <div class="pgr-faq-item"><button type="button" class="pgr-faq-q" aria-expanded="false"><span>Como recebo o plugin depois de comprar?</span><span class="pgr-faq-arrow" aria-hidden="true"></span></button><div class="pgr-faq-a">A Eduzz libera o download do instalador assim que o pagamento é confirmado. É um arquivo .exe: dois cliques, sem precisar de administrador, e depois é só reiniciar o Photoshop.</div></div>
-        <div class="pgr-faq-item"><button type="button" class="pgr-faq-q" aria-expanded="false"><span>E quando sair versão nova?</span><span class="pgr-faq-arrow" aria-hidden="true"></span></button><div class="pgr-faq-a">O próprio painel avisa e mostra o que mudou. O botão "Baixar" abre o instalador novo, e você também pode clicar em "Verificar atualização" no rodapé do painel quando quiser.</div></div>
-        <div class="pgr-faq-item"><button type="button" class="pgr-faq-q" aria-expanded="false"><span>Preciso de internet para usar?</span><span class="pgr-faq-arrow" aria-hidden="true"></span></button><div class="pgr-faq-a">Não. A internet só é usada para checar se existe versão nova. A grade é gerada no seu computador.</div></div>
-        <div class="pgr-faq-item"><button type="button" class="pgr-faq-q" aria-expanded="false"><span>Funciona no Mac?</span><span class="pgr-faq-arrow" aria-hidden="true"></span></button><div class="pgr-faq-a">Ainda não. Por enquanto o instalador é só para Windows.</div></div>
+        <div class="pgr-faq-item"><button type="button" class="pgr-faq-q" aria-expanded="false"><span>{{t.faq.q1}}</span><span class="pgr-faq-arrow" aria-hidden="true"></span></button><div class="pgr-faq-a">{{t.faq.a1}}</div></div>
+        <div class="pgr-faq-item"><button type="button" class="pgr-faq-q" aria-expanded="false"><span>{{t.faq.q2}}</span><span class="pgr-faq-arrow" aria-hidden="true"></span></button><div class="pgr-faq-a">{{t.faq.a2}}</div></div>
+        <div class="pgr-faq-item"><button type="button" class="pgr-faq-q" aria-expanded="false"><span>{{t.faq.q3}}</span><span class="pgr-faq-arrow" aria-hidden="true"></span></button><div class="pgr-faq-a">{{t.faq.a3}}</div></div>
+        <div class="pgr-faq-item"><button type="button" class="pgr-faq-q" aria-expanded="false"><span>{{t.faq.q4}}</span><span class="pgr-faq-arrow" aria-hidden="true"></span></button><div class="pgr-faq-a">{{t.faq.a4}}</div></div>
+        <div class="pgr-faq-item"><button type="button" class="pgr-faq-q" aria-expanded="false"><span>{{t.faq.q5}}</span><span class="pgr-faq-arrow" aria-hidden="true"></span></button><div class="pgr-faq-a">{{t.faq.a5}}</div></div>
+        <div class="pgr-faq-item"><button type="button" class="pgr-faq-q" aria-expanded="false"><span>{{t.faq.q6}}</span><span class="pgr-faq-arrow" aria-hidden="true"></span></button><div class="pgr-faq-a">{{t.faq.a6}}</div></div>
       </div>
     </div>
   </section>
@@ -468,11 +478,11 @@
   <section style="padding:2.5rem 0 1rem;">
     <div class="pgr-wrap">
       <div class="pgr-xui">
-        <img src="https://xuimart.com.br/wp-content/uploads/2026/07/xuimassuntoartetransparente.png" width="190" height="211" loading="lazy" alt="Xuimzinho, mascote da XuimArt" onerror="this.style.display='none'">
+        <img src="https://xuimart.com.br/wp-content/uploads/2026/07/xuimassuntoartetransparente.png" width="190" height="211" loading="lazy" alt="Xuimzinho" onerror="this.style.display='none'">
         <div class="pgr-bubble">
-          <strong>Ficou com alguma dúvida antes de comprar? 👀</strong>
-          <p>Me manda uma mensagem pelo formulário de suporte. Eu mesmo respondo! ♥</p>
-          <a href="#pgr-suporte" class="pgr-btn pgr-btn-secondary">Falar comigo</a>
+          <strong>{{t.xui.title}}</strong>
+          <p>{{t.xui.desc}}</p>
+          <a href="#pgr-suporte" class="pgr-btn pgr-btn-secondary">{{t.xui.btn}}</a>
         </div>
       </div>
     </div>
@@ -514,7 +524,6 @@
   var imgs = root.querySelector('.pgr-car-imgs');
   imgs.addEventListener('mouseenter', function () { clearInterval(timer); });
   imgs.addEventListener('mouseleave', restart);
-  // Arrastar o dedo no celular troca a tela.
   var startX = null;
   imgs.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
   imgs.addEventListener('touchend', function (e) {
