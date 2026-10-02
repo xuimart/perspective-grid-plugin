@@ -12,6 +12,8 @@
 
   const G = (typeof window !== 'undefined' ? window : globalThis).PerspectiveGeometry;
   const PS = (typeof window !== 'undefined' ? window : globalThis).PSAdapter;
+  const I18N = (typeof window !== 'undefined' ? window : globalThis).PGI18n;
+  const T = (key, vars) => (I18N ? I18N.t(key, vars) : key);
   const $ = id => document.getElementById(id);
   const STORAGE_KEY = 'perspective-grid-uxp-v2';
 
@@ -154,7 +156,7 @@
     });
     if (typeof ddSet === 'function') {
       ddSet($('preset'), state.preset);
-      ddSet($('referenceModel'), state.referenceModel);
+      ddSet($('referenceModel'), state.showCube ? state.referenceModel : 'none');
       ddSet($('gridStyle'), state.gridStyle);
       const lensVal = ['10','14','24','35','50','85','135','200','300'].includes(String(state.focalLength)) ? String(state.focalLength) : '';
       ddSet($('lensPreset'), lensVal);
@@ -359,16 +361,16 @@
   /* ---------- Apply to layer (host) ---------- */
 
   async function applyToLayer() {
-    if (!PS || !PS.available) { setStatus('Photoshop indisponível.', 'error'); return; }
-    if (!doc) { setStatus('Abra um documento primeiro.', 'error'); return; }
+    if (!PS || !PS.available) { setStatus(T('status.noPs'), 'error'); return; }
+    if (!doc) { setStatus(T('status.needDoc'), 'error'); return; }
     if (busy) { applyQueued = true; return; }
     busy = true;
-    setStatus('Aplicando…');
+    setStatus(T('status.applying'));
     try {
       const rgba = renderGridBuffer(doc.width, doc.height);
       const result = await PS.applyGrid(rgba, doc.width, doc.height, gridLayerId);
       gridLayerId = result.layerID;
-      setStatus(result.created ? 'Camada criada e atualizada.' : 'Grade atualizada.', 'ok');
+      setStatus(result.created ? T('status.layerCreated') : T('status.gridUpdated'), 'ok');
     } catch (err) { reportError(err); }
     finally {
       busy = false;
@@ -378,7 +380,7 @@
 
   function reportError(err) {
     console.error(err);
-    setStatus('Erro: ' + (err && err.message ? err.message : String(err)), 'error');
+    setStatus(T('status.error', { msg: (err && err.message ? err.message : String(err)) }), 'error');
   }
 
   /* ---------- export ---------- */
@@ -397,14 +399,13 @@
     doc = info;
     const enabled = !!(doc && PS && PS.available);
     $('applyBtn').disabled = !enabled;
-    $('refreshBtn').disabled = !enabled;
     if (!doc) {
-      $('docInfo').textContent = 'Nenhum documento';
-      setStatus('Abra um documento para começar.');
+      $('docInfo').textContent = T('doc.none');
+      setStatus(T('status.openDoc'));
     } else {
       if (doc.id !== prev) gridLayerId = null;
       $('docInfo').textContent = `${doc.title} · ${doc.width}×${doc.height}`;
-      setStatus('Pronto. Ajuste e clique em Aplicar/Atualizar.');
+      setStatus(T('status.ready'));
     }
     fitPreviewBox();
     drawPreview();
@@ -447,7 +448,7 @@
     const dd = $('depthAxis'); if (!dd) return;
     const menu = dd.querySelector('sp-menu'); if (!menu) return;
     const axes = state.showCube ? G.modelAxes(state, docW(), docH()) : [];
-    menu.innerHTML = '<sp-menu-item value="">Selecione um PF</sp-menu-item>' +
+    menu.innerHTML = '<sp-menu-item value="">' + T('depth.pick') + '</sp-menu-item>' +
       axes.map(a => `<sp-menu-item value="${a.axis}|${a.label}">${a.label} · ${a.axis.toUpperCase()}</sp-menu-item>`).join('');
   }
 
@@ -510,7 +511,11 @@
     });
     // Dropdowns.
     wireDd('preset', v => change({ ...presetValues[v], preset: v }));
-    wireDd('referenceModel', v => change({ referenceModel: v, showCube: true }));
+    // "Nenhum" (value vazio/none) desliga o modelo; qualquer modelo liga.
+    wireDd('referenceModel', v => {
+      if (!v || v === 'none') change({ showCube: false });
+      else change({ referenceModel: v, showCube: true });
+    });
     wireDd('gridStyle', v => change({ gridStyle: v }));
     wireDd('lensPreset', v => { if (v) change({ focalLength: Number(v) }); });
     // Line-style presets: gray / black / colored (by vanishing point).
@@ -524,7 +529,7 @@
       const p = {};
       ['yaw','pitch','roll','focalLength','distortion','distance','panX','panY','viewZoom','boxSize'].forEach(k => p[k] = G.defaults[k]);
       change({ ...p, ...(presetValues[state.preset] || {}), modelPositions: G.defaults.modelPositions });
-      setStatus('Cena restaurada.', 'ok');
+      setStatus(T('status.sceneReset'), 'ok');
     });
     // Model opacity slider (UI-only; not part of the geometry state).
     const mo = $('modelOpacity');
@@ -571,9 +576,9 @@
       if (open) body.removeAttribute('hidden'); else body.setAttribute('hidden', '');
     });
     wireBtn('fitModelBtn', () => {
-      if (!state.showCube) { setStatus('Ative "Mostrar".'); return; }
+      if (!state.showCube) { setStatus(T('status.enableShow')); return; }
       const distance = G.framingDistance(state, state, modelFramingPoints(), 4);
-      change({ distance, panX: 0, panY: 0 }); setStatus('Modelo enquadrado.', 'ok');
+      change({ distance, panX: 0, panY: 0 }); setStatus(T('status.modelFit'), 'ok');
     });
     // Movement mode: orbit (default) / plane / depth. Shows the PF selector for depth.
     wireDd('moveMode', v => {
@@ -612,8 +617,10 @@
       if (n === name && !t.mounted) { t.ph.parentNode.insertBefore(t.body, t.ph); t.mounted = true; }
       else if (n !== name && t.mounted) { t.body.parentNode.removeChild(t.body); t.mounted = false; }
     });
-    // Re-mounted controls are fresh DOM nodes: (re)attach their listeners.
+    // Re-mounted controls are fresh DOM nodes: (re)attach their listeners and
+    // reapply the current language (the HTML markup is in Portuguese).
     wireControls();
+    if (I18N) I18N.applyStatic(tabScroll);
     syncControls();
     tabScroll.scrollTop = 0;
     document.querySelectorAll('[data-tab]').forEach(button => button.setAttribute('aria-selected', String(button.dataset.tab === name)));
@@ -629,7 +636,6 @@
   /* ---------- footer actions ---------- */
 
   $('applyBtn').addEventListener('click', () => applyToLayer().catch(reportError));
-  $('refreshBtn').addEventListener('click', () => applyToLayer().catch(reportError));
 
   /* ---------- drag on preview to orbit ---------- */
 
@@ -641,7 +647,7 @@
     // Shift + Alt + arrastar = mover o modelo livremente no plano da tela.
     const model = !pan && e.shiftKey && e.altKey;
     drag = { id: e.pointerId, x: e.clientX, y: e.clientY, pan, model };
-    if (model) setStatus(state.showCube ? 'Movendo o modelo. Shift + Alt + Z volta ao centro.' : 'Ative o modelo na aba Modelo para movê-lo.');
+    if (model) setStatus(state.showCube ? T('status.modelMoving') : T('status.enableModel'));
     interacting = true;
     try { preview.setPointerCapture(e.pointerId); } catch (_) {}
     e.preventDefault();
@@ -699,7 +705,7 @@
   function setPreviewMax(on) {
     previewMax = !!on;
     document.querySelector('.panel').classList.toggle('preview-max', previewMax);
-    const label = previewMax ? 'Voltar ao painel (Esc)' : 'Ampliar preview';
+    const label = previewMax ? T('preview.collapse') : T('preview.expand');
     if (expandBtn) {
       expandBtn.title = label;
       expandBtn.setAttribute('aria-label', label);
@@ -724,7 +730,7 @@
     e.preventDefault();
     if (e.stopPropagation) e.stopPropagation();
     change({ modelPositions: { ...state.modelPositions, [state.referenceModel]: [0,0,0] } });
-    setStatus('Posição do modelo restaurada.');
+    setStatus(T('status.modelCentered'));
   }, true);
 
   // Orientation cube: dragging always orbits the camera.
@@ -761,13 +767,13 @@
     interacting = true;
     if (e.shiftKey) {
       // Roda para cima = lente mais longa. Passo mínimo de 1 mm para nunca travar.
-      if (state.projection === 'ortho') setStatus('A ortográfica não usa lente: troque a perspectiva para mudar os mm.');
+      if (state.projection === 'ortho') setStatus(T('status.orthoNoLens'));
       else {
         const now = Math.round(state.focalLength);
         let mm = Math.round(G.clamp(state.focalLength * factor, 10, 300));
         if (mm === now) mm = G.clamp(now + (delta < 0 ? 1 : -1), 10, 300);
         change({ focalLength: mm });
-        setStatus('Distância focal: ' + mm + ' mm');
+        setStatus(T('status.focal', { mm: mm }));
       }
     } else {
       change({ viewZoom: G.clamp(state.viewZoom * factor, 25, 300) });
@@ -795,6 +801,26 @@
 
   window.addEventListener('resize', () => { fitPreviewBox(); drawPreview(); });
 
+  /* ---------- idioma (PT/EN) ---------- */
+
+  function applyLang() {
+    if (I18N) I18N.applyStatic(document);
+    const lb = $('langBtn');
+    if (lb && I18N) { lb.textContent = I18N.t('lang.toggle'); lb.title = 'Português / English'; }
+    // Textos derivados do estado (ex.: rótulo do botão de ampliar) e opções de PF.
+    if (typeof setPreviewMax === 'function') setPreviewMax(previewMax);
+    if (typeof refreshDepthAxisOptions === 'function') refreshDepthAxisOptions();
+    syncControls();
+  }
+  if (I18N) {
+    I18N.applyStatic(document);
+    const langBtn = $('langBtn');
+    if (langBtn) {
+      langBtn.textContent = I18N.t('lang.toggle');
+      langBtn.addEventListener('click', () => { I18N.toggle(); applyLang(); });
+    }
+  }
+
   /* ---------- init ---------- */
 
   syncControls();
@@ -804,8 +830,8 @@
     refreshDoc(PS.activeDocumentInfo());
   } else {
     $('applyBtn').disabled = true;
-    $('docInfo').textContent = 'Modo desenvolvimento';
-    setStatus('Prévia local. Aplicar e atualizar exigem Photoshop.');
+    $('docInfo').textContent = T('doc.dev');
+    setStatus(T('status.localPreview'));
     drawPreview();
   }
 

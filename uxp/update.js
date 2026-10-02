@@ -21,6 +21,11 @@
     : 'https://raw.githubusercontent.com/xuimart/perspective-grid-plugin/master/version.json';
   const TIMEOUT_MS = 8000;
 
+  // Tradução: usa o idioma escolhido no painel; cai no texto da chave se faltar.
+  function tr(key, vars) {
+    return root.PGI18n ? root.PGI18n.t(key, vars) : key;
+  }
+
   function uxpModule() {
     try { return require('uxp'); } catch (_) { return null; }
   }
@@ -71,7 +76,7 @@
     const u = uxpModule();
     if (u && u.shell && u.shell.openExternal) {
       // O Photoshop pede confirmação ao usuário; este texto aparece no diálogo.
-      return u.shell.openExternal(url, 'Abrir no navegador o download da nova versão do Perspective Grid.');
+      return u.shell.openExternal(url, tr('update.openExternal'));
     }
     if (root.cep && root.cep.util && root.cep.util.openURLInDefaultBrowser) {
       root.cep.util.openURLInDefaultBrowser(url);
@@ -96,7 +101,7 @@
     const text = document.createElement('div');
     text.className = 'update-text';
     const title = document.createElement('strong');
-    title.textContent = 'Nova versão ' + update.version + ' disponível';
+    title.textContent = tr('update.new', { version: update.version });
     text.appendChild(title);
     if (update.changelog) {
       const log = document.createElement('span');
@@ -107,14 +112,14 @@
     const download = document.createElement('button');
     download.type = 'button';
     download.className = 'primary';
-    download.textContent = 'Baixar';
+    download.textContent = tr('update.download');
     download.addEventListener('click', () => { openDownload(update.downloadUrl); });
 
     const close = document.createElement('button');
     close.type = 'button';
     close.className = 'update-close';
     close.textContent = '×';
-    close.setAttribute('aria-label', 'Fechar aviso de atualização');
+    close.setAttribute('aria-label', tr('update.close'));
     close.addEventListener('click', () => { removeBanner(); if (onLayout) onLayout(); });
 
     banner.appendChild(text);
@@ -132,20 +137,20 @@
     const o = opts || {};
     const say = o.manual && o.onStatus ? o.onStatus : () => {};
     const current = localVersion();
-    if (!current) { say('A verificação de atualização só funciona dentro do Photoshop.', 'error'); return null; }
-    say('Verificando atualização…');
+    if (!current) { say(tr('update.onlyInPs'), 'error'); return null; }
+    say(tr('update.checking'));
     try {
       const remote = parse(await fetchRemote());
       if (!remote) throw new Error('version.json inválido');
       if (compareVersions(remote.version, current) > 0) {
         showBanner(remote, o.onLayout);
-        say('Nova versão ' + remote.version + ' disponível.', 'ok');
+        say(tr('update.available', { version: remote.version }), 'ok');
         return remote;
       }
-      say('Você já está na versão mais recente (' + current + ').', 'ok');
+      say(tr('update.upToDate', { version: current }), 'ok');
       return null;
     } catch (_) {
-      say('Não foi possível verificar agora. Confira a conexão com a internet e tente de novo.', 'error');
+      say(tr('update.failed'), 'error');
       return null;
     }
   }

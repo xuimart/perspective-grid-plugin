@@ -34,6 +34,7 @@ const SCRIPTS = [
   ['cep', 'js/polyfills.js', 'polyfills.js'],
   ['gen', null, 'config.js'],
   ['cep', 'js/sp-shim.js', 'sp-shim.js'],
+  ['uxp', 'i18n.js', 'i18n.js'],
   ['uxp', 'geometry.js', 'geometry.js'],
   ['uxp', 'raster.js', 'raster.js'],
   ['uxp', 'models.js', 'models.js'],

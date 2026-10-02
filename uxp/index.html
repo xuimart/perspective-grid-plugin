@@ -10,10 +10,10 @@
     <div class="top">
       <div class="preview-wrap">
         <svg id="previewSvg" class="preview" preserveAspectRatio="none"></svg>
-        <img id="previewA" class="preview buf-hidden" alt="Pré-visualização da grade">
+        <img id="previewA" class="preview buf-hidden" data-i18n-attr="alt:preview.alt" alt="Pré-visualização da grade">
         <img id="previewB" class="preview buf-hidden" alt="">
-        <div class="preview-hint" id="docInfo">Nenhum documento</div>
-        <button type="button" id="expandBtn" class="preview-expand" title="Ampliar preview" aria-label="Ampliar preview" aria-pressed="false">
+        <div class="preview-hint" id="docInfo" data-i18n="doc.none">Nenhum documento</div>
+        <button type="button" id="expandBtn" class="preview-expand" data-i18n-attr="title:preview.expand; aria-label:preview.expand" title="Ampliar preview" aria-label="Ampliar preview" aria-pressed="false">
           <svg viewBox="0 0 12 12" width="12" height="12" aria-hidden="true"><path d="M1 4.5V1h3.5M7.5 1H11v3.5M11 7.5V11H7.5M4.5 11H1V7.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
         </button>
       </div>
@@ -21,30 +21,30 @@
 
     <!-- Abas -->
     <div class="tabs" role="tablist">
-      <button type="button" data-tab="camera" class="active" role="tab">Câmera</button>
-      <button type="button" data-tab="grid" role="tab">Grade</button>
-      <button type="button" data-tab="model" role="tab">Modelo</button>
+      <button type="button" data-tab="camera" class="active" role="tab" data-i18n="tab.camera">Câmera</button>
+      <button type="button" data-tab="grid" role="tab" data-i18n="tab.grid">Grade</button>
+      <button type="button" data-tab="model" role="tab" data-i18n="tab.model">Modelo</button>
     </div>
 
     <div class="tab-scroll">
       <!-- ABA CÂMERA -->
       <section class="tab-body" data-tabbody="camera">
         <div class="row">
-          <label>Perspectiva</label>
+          <label data-i18n="cam.perspective">Perspectiva</label>
           <sp-dropdown id="preset" class="dd"><sp-menu slot="options">
-            <sp-menu-item value="free">Livre</sp-menu-item>
-            <sp-menu-item value="one">1 ponto</sp-menu-item>
-            <sp-menu-item value="two">2 pontos</sp-menu-item>
-            <sp-menu-item value="three">3 pontos</sp-menu-item>
-            <sp-menu-item value="five">Olho de peixe</sp-menu-item>
-            <sp-menu-item value="ortho">Ortográfica</sp-menu-item>
+            <sp-menu-item value="free" data-i18n="preset.free">Livre</sp-menu-item>
+            <sp-menu-item value="one" data-i18n="preset.one">1 ponto</sp-menu-item>
+            <sp-menu-item value="two" data-i18n="preset.two">2 pontos</sp-menu-item>
+            <sp-menu-item value="three" data-i18n="preset.three">3 pontos</sp-menu-item>
+            <sp-menu-item value="five" data-i18n="preset.five">Olho de peixe</sp-menu-item>
+            <sp-menu-item value="ortho" data-i18n="preset.ortho">Ortográfica</sp-menu-item>
           </sp-menu></sp-dropdown>
         </div>
 
         <div class="row">
-          <label>Lente</label>
+          <label data-i18n="cam.lens">Lente</label>
           <sp-dropdown id="lensPreset" class="dd"><sp-menu slot="options">
-            <sp-menu-item value="">Personalizada</sp-menu-item>
+            <sp-menu-item value="" data-i18n="lens.custom">Personalizada</sp-menu-item>
             <sp-menu-item value="10">10 mm</sp-menu-item><sp-menu-item value="14">14 mm</sp-menu-item>
             <sp-menu-item value="24">24 mm</sp-menu-item><sp-menu-item value="35">35 mm</sp-menu-item>
             <sp-menu-item value="50">50 mm</sp-menu-item><sp-menu-item value="85">85 mm</sp-menu-item>
@@ -54,121 +54,122 @@
         </div>
         <div id="orthoAngles" class="ortho-angles">
           <div class="angle-row">
-            <label>Rotação</label><input type="number" id="yawDeg" step="1" min="-180" max="180"><small>°</small>
-            <label>Inclin.</label><input type="number" id="pitchDeg" step="1" min="-89" max="89"><small>°</small>
+            <label data-i18n="cam.rotation">Rotação</label><input type="number" id="yawDeg" step="1" min="-180" max="180"><small>°</small>
+            <label data-i18n="cam.tilt">Inclin.</label><input type="number" id="pitchDeg" step="1" min="-89" max="89"><small>°</small>
           </div>
           <div class="row">
-            <label>Vista</label>
+            <label data-i18n="cam.view">Vista</label>
             <sp-dropdown id="orthoPreset" class="dd"><sp-menu slot="options">
-              <sp-menu-item value="custom">Personalizada</sp-menu-item>
-              <sp-menu-item value="iso">Isométrica</sp-menu-item>
-              <sp-menu-item value="dimetric">Dimétrica</sp-menu-item>
-              <sp-menu-item value="trimetric">Trimétrica</sp-menu-item>
-              <sp-menu-item value="front">Frente</sp-menu-item>
-              <sp-menu-item value="right">Lado</sp-menu-item>
-              <sp-menu-item value="top">Topo</sp-menu-item>
+              <sp-menu-item value="custom" data-i18n="view.custom">Personalizada</sp-menu-item>
+              <sp-menu-item value="iso" data-i18n="view.iso">Isométrica</sp-menu-item>
+              <sp-menu-item value="dimetric" data-i18n="view.dimetric">Dimétrica</sp-menu-item>
+              <sp-menu-item value="trimetric" data-i18n="view.trimetric">Trimétrica</sp-menu-item>
+              <sp-menu-item value="front" data-i18n="view.front">Frente</sp-menu-item>
+              <sp-menu-item value="right" data-i18n="view.right">Lado</sp-menu-item>
+              <sp-menu-item value="top" data-i18n="view.top">Topo</sp-menu-item>
             </sp-menu></sp-dropdown>
           </div>
         </div>
 
-        <div class="section-title">Óptica</div>
+        <div class="section-title" data-i18n="sec.optics">Óptica</div>
         <div class="sliders">
-          <sp-slider id="focalLength" data-key="focalLength" min="10" max="300" step="1"><sp-label slot="label">Distância focal (mm)</sp-label></sp-slider>
-          <sp-slider id="distortion" data-key="distortion" min="0" max="100" step="1" hidden><sp-label slot="label">Distorção (%)</sp-label></sp-slider>
-          <sp-slider id="viewZoom" data-key="viewZoom" min="25" max="300" step="1"><sp-label slot="label">Zoom da cena (%)</sp-label></sp-slider>
+          <sp-slider id="focalLength" data-key="focalLength" min="10" max="300" step="1"><sp-label slot="label" data-i18n="cam.focal">Distância focal (mm)</sp-label></sp-slider>
+          <sp-slider id="distortion" data-key="distortion" min="0" max="100" step="1" hidden><sp-label slot="label" data-i18n="cam.distortion">Distorção (%)</sp-label></sp-slider>
+          <sp-slider id="viewZoom" data-key="viewZoom" min="25" max="300" step="1"><sp-label slot="label" data-i18n="cam.zoom">Zoom da cena (%)</sp-label></sp-slider>
         </div>
 
-        <div class="section-title">Enquadramento</div>
+        <div class="section-title" data-i18n="sec.framing">Enquadramento</div>
         <div class="slider-with-reset">
-          <sp-slider id="roll" data-key="roll" min="-180" max="180" step="1"><sp-label slot="label">Roll (inclinação)</sp-label></sp-slider>
+          <sp-slider id="roll" data-key="roll" min="-180" max="180" step="1"><sp-label slot="label" data-i18n="cam.roll">Roll (inclinação)</sp-label></sp-slider>
           <span id="rollVal" class="mini-val">0°</span>
         </div>
 
-        <button id="resetBtn" class="secondary full" type="button">↺ Restaurar cena</button>
+        <button id="resetBtn" class="secondary full" type="button" data-i18n="btn.reset">↺ Restaurar cena</button>
       </section>
 
       <!-- ABA GRADE -->
       <section class="tab-body" data-tabbody="grid" hidden>
         <div class="row">
-          <label>Construção</label>
+          <label data-i18n="grid.construction">Construção</label>
           <sp-dropdown id="gridStyle" class="dd"><sp-menu slot="options">
-            <sp-menu-item value="rays">Raios de fuga</sp-menu-item>
-            <sp-menu-item value="space">Malha espacial</sp-menu-item>
-            <sp-menu-item value="floor">Chão alinhado</sp-menu-item>
+            <sp-menu-item value="rays" data-i18n="grid.rays">Raios de fuga</sp-menu-item>
+            <sp-menu-item value="space" data-i18n="grid.space">Malha espacial</sp-menu-item>
+            <sp-menu-item value="floor" data-i18n="grid.floor">Chão alinhado</sp-menu-item>
           </sp-menu></sp-dropdown>
         </div>
         <div class="row">
-          <label>Estilo</label>
+          <label data-i18n="grid.style">Estilo</label>
           <sp-dropdown id="colorStyle" class="dd"><sp-menu slot="options">
-            <sp-menu-item value="gray">Linha cinza</sp-menu-item>
-            <sp-menu-item value="black">Linha preta</sp-menu-item>
-            <sp-menu-item value="color">Linhas coloridas</sp-menu-item>
+            <sp-menu-item value="gray" data-i18n="color.gray">Linha cinza</sp-menu-item>
+            <sp-menu-item value="black" data-i18n="color.black">Linha preta</sp-menu-item>
+            <sp-menu-item value="color" data-i18n="color.color">Linhas coloridas</sp-menu-item>
           </sp-menu></sp-dropdown>
         </div>
 
-        <div class="section-title">Número de linhas guias</div>
+        <div class="section-title" data-i18n="sec.guides">Número de linhas guias</div>
         <div class="guide-counts">
-          <div class="count-row"><label for="xCountNum">X</label><input type="number" id="xCountNum" class="count-num" min="1" max="64" step="1"><sp-checkbox id="xLines" data-key="xLines" aria-label="Mostrar guias X" checked></sp-checkbox></div>
-          <div class="count-row"><label for="zCountNum">Z</label><input type="number" id="zCountNum" class="count-num" min="1" max="64" step="1"><sp-checkbox id="zLines" data-key="zLines" aria-label="Mostrar guias Z" checked></sp-checkbox></div>
-          <div class="count-row"><label for="yCountNum">Y</label><input type="number" id="yCountNum" class="count-num" min="1" max="64" step="1"><sp-checkbox id="yLines" data-key="yLines" aria-label="Mostrar guias Y" checked></sp-checkbox></div>
+          <div class="count-row"><label for="xCountNum">X</label><input type="number" id="xCountNum" class="count-num" min="1" max="64" step="1"><sp-checkbox id="xLines" data-key="xLines" data-i18n-attr="aria-label:guides.showX" aria-label="Mostrar guias X" checked></sp-checkbox></div>
+          <div class="count-row"><label for="zCountNum">Z</label><input type="number" id="zCountNum" class="count-num" min="1" max="64" step="1"><sp-checkbox id="zLines" data-key="zLines" data-i18n-attr="aria-label:guides.showZ" aria-label="Mostrar guias Z" checked></sp-checkbox></div>
+          <div class="count-row"><label for="yCountNum">Y</label><input type="number" id="yCountNum" class="count-num" min="1" max="64" step="1"><sp-checkbox id="yLines" data-key="yLines" data-i18n-attr="aria-label:guides.showY" aria-label="Mostrar guias Y" checked></sp-checkbox></div>
         </div>
 
-        <div class="section-title">Traço</div>
+        <div class="section-title" data-i18n="sec.stroke">Traço</div>
         <div class="sliders">
-          <sp-slider id="opacity" data-key="opacity" min="10" max="100" step="1"><sp-label slot="label">Opacidade</sp-label></sp-slider>
-          <sp-slider id="lineWidth" data-key="lineWidth" min="0.5" max="4" step="0.1"><sp-label slot="label">Espessura</sp-label></sp-slider>
+          <sp-slider id="opacity" data-key="opacity" min="10" max="100" step="1"><sp-label slot="label" data-i18n="grid.opacity">Opacidade</sp-label></sp-slider>
+          <sp-slider id="lineWidth" data-key="lineWidth" min="0.5" max="4" step="0.1"><sp-label slot="label" data-i18n="grid.width">Espessura</sp-label></sp-slider>
         </div>
 
         <div class="toggles wide">
-          <sp-checkbox id="showVps" data-key="showVps" checked>Pontos de fuga</sp-checkbox>
-          <sp-checkbox id="showGrid" data-key="showGrid" checked>Mostrar grade</sp-checkbox>
+          <sp-checkbox id="showVps" data-key="showVps" data-i18n="grid.vps" checked>Pontos de fuga</sp-checkbox>
+          <sp-checkbox id="showGrid" data-key="showGrid" data-i18n="grid.show" checked>Mostrar grade</sp-checkbox>
         </div>
       </section>
 
       <!-- ABA MODELO -->
       <section class="tab-body" data-tabbody="model" hidden>
         <div class="row">
-          <sp-checkbox id="showCube" data-key="showCube">Mostrar</sp-checkbox>
+          <label data-i18n="model.label">Modelo</label>
           <sp-dropdown id="referenceModel" class="dd"><sp-menu slot="options">
-            <sp-menu-item value="box">Caixa</sp-menu-item>
-            <sp-menu-item value="table">Mesa</sp-menu-item>
-            <sp-menu-item value="room">Quarto</sp-menu-item>
-            <sp-menu-item value="person">Personagem</sp-menu-item>
+            <sp-menu-item value="none" data-i18n="model.none">Nenhum</sp-menu-item>
+            <sp-menu-item value="box" data-i18n="model.box">Caixa</sp-menu-item>
+            <sp-menu-item value="table" data-i18n="model.table">Mesa</sp-menu-item>
+            <sp-menu-item value="room" data-i18n="model.room">Quarto</sp-menu-item>
+            <sp-menu-item value="person" data-i18n="model.person">Personagem</sp-menu-item>
           </sp-menu></sp-dropdown>
         </div>
 
-        <div class="section-title">Dimensões</div>
+        <div class="section-title" data-i18n="sec.dimensions">Dimensões</div>
         <div class="sliders">
-          <sp-slider id="boxSize" data-key="boxSize" min="0.5" max="2.5" step="0.1"><sp-label slot="label">Tamanho</sp-label></sp-slider>
-          <sp-slider id="modelOpacity" min="10" max="100" step="1" value="85"><sp-label slot="label">Opacidade do modelo</sp-label></sp-slider>
+          <sp-slider id="boxSize" data-key="boxSize" min="0.5" max="2.5" step="0.1"><sp-label slot="label" data-i18n="model.size">Tamanho</sp-label></sp-slider>
+          <sp-slider id="modelOpacity" min="10" max="100" step="1" value="85"><sp-label slot="label" data-i18n="model.opacity">Opacidade do modelo</sp-label></sp-slider>
         </div>
 
         <div class="two-btn">
-          <button id="centerModelBtn" class="secondary" type="button">Centralizar</button>
-          <button id="fitModelBtn" class="secondary" type="button">Enquadrar</button>
+          <button id="centerModelBtn" class="secondary" type="button" data-i18n="btn.center">Centralizar</button>
+          <button id="fitModelBtn" class="secondary" type="button" data-i18n="btn.fit">Enquadrar</button>
         </div>
-        <button id="modelAdvancedBtn" type="button" class="disclosure" aria-expanded="false">Posição e profundidade</button>
+        <button id="modelAdvancedBtn" type="button" class="disclosure" aria-expanded="false" data-i18n="model.advanced">Posição e profundidade</button>
         <div id="modelAdvanced" hidden>
-        <div class="section-title">Posição no espaço</div>
+        <div class="section-title" data-i18n="sec.position">Posição no espaço</div>
         <div class="xyz">
           <label>X <input type="number" id="posX" step="0.5" min="-100" max="100"></label>
           <label>Y <input type="number" id="posY" step="0.5" min="-100" max="100"></label>
           <label>Z <input type="number" id="posZ" step="0.5" min="-100" max="100"></label>
         </div>
 
-        <div class="section-title">Movimento (arraste no preview)</div>
+        <div class="section-title" data-i18n="sec.move">Movimento (arraste no preview)</div>
         <div class="row">
-          <label>Modo</label>
+          <label data-i18n="move.mode">Modo</label>
           <sp-dropdown id="moveMode" class="dd"><sp-menu slot="options">
-            <sp-menu-item value="orbit">Girar câmera</sp-menu-item>
-            <sp-menu-item value="plane">Mover no plano</sp-menu-item>
-            <sp-menu-item value="depth">Profundidade por PF</sp-menu-item>
+            <sp-menu-item value="orbit" data-i18n="move.orbit">Girar câmera</sp-menu-item>
+            <sp-menu-item value="plane" data-i18n="move.plane">Mover no plano</sp-menu-item>
+            <sp-menu-item value="depth" data-i18n="move.depth">Profundidade por PF</sp-menu-item>
           </sp-menu></sp-dropdown>
         </div>
         <div class="row" id="depthAxisRow" hidden>
-          <label>Direção</label>
+          <label data-i18n="move.direction">Direção</label>
           <sp-dropdown id="depthAxis" class="dd"><sp-menu slot="options">
-            <sp-menu-item value="">Selecione um PF</sp-menu-item>
+            <sp-menu-item value="" data-i18n="depth.pick">Selecione um PF</sp-menu-item>
           </sp-menu></sp-dropdown>
         </div>
         </div>
@@ -178,17 +179,20 @@
     <!-- Ações fixas -->
     <div class="actions">
       <div class="apply-row">
-        <button id="applyBtn" class="primary" disabled>Aplicar na camada</button>
-        <button id="refreshBtn" class="secondary" disabled>Atualizar malha</button>
+        <button id="applyBtn" class="primary" disabled data-i18n="btn.apply">Aplicar na camada</button>
       </div>
-      <div class="status" id="status">Abra um documento para começar.</div>
+      <div class="status" id="status" data-i18n="status.openDoc">Abra um documento para começar.</div>
       <div class="about-row">
         <span id="versionLabel">Perspective Grid</span>
-        <button id="checkUpdateBtn" type="button" class="link-btn">Verificar atualização</button>
+        <span class="about-right">
+          <button id="checkUpdateBtn" type="button" class="link-btn" data-i18n="btn.checkUpdate">Verificar atualização</button>
+          <button id="langBtn" type="button" class="link-btn lang-btn" title="Português / English" aria-label="Trocar idioma">EN</button>
+        </span>
       </div>
     </div>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="geometry.js"></script>
   <script src="raster.js"></script>
   <script src="models.js"></script>

@@ -192,8 +192,12 @@ button.full { margin-top:10px; }
 .update-close { flex:0 0 auto; margin-left:4px; padding:0 4px; background:transparent; border:0; font-size:16px; line-height:16px; color:var(--muted); }
 .update-close:hover { background:transparent; color:var(--text); }
 .about-row { display:flex; align-items:center; justify-content:space-between; margin-top:6px; font-size:10px; line-height:14px; color:var(--muted); }
+.about-right { display:flex; align-items:center; gap:8px; }
 .link-btn { padding:0; background:transparent; border:0; font-size:10px; line-height:14px; color:var(--muted); text-decoration:underline; }
 .link-btn:hover { background:transparent; color:var(--text); }
+/* Botão de idioma (PT/EN): pastilha pequena ao lado de "Verificar atualização". */
+.lang-btn { text-decoration:none; min-width:26px; padding:2px 8px; border:1px solid var(--line); border-radius:100px; font-weight:700; letter-spacing:.04em; }
+.lang-btn:hover, .lang-btn:focus { border-color:var(--accent); background:transparent; color:var(--text); }
 /* Verificar atualização: botão pequeno com borda, fácil de achar no rodapé. */
 #checkUpdateBtn { padding:3px 8px; font-size:10px; line-height:14px; color:var(--text); text-decoration:none; border:1px solid var(--line); border-radius:3px; }
 #checkUpdateBtn:hover, #checkUpdateBtn:focus { border-color:var(--accent); background:transparent; }
