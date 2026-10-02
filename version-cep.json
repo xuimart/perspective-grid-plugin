@@ -1,5 +1,5 @@
 {
-    "version":  "0.10.5",
+    "version":  "0.10.6",
     "downloadUrl":  "https://github.com/xuimart/perspective-grid-plugin/releases/latest/download/PerspectiveGrid_CEP_Setup.exe",
-    "changelog":  "Aviso de atualização no painel CEP, mover o modelo com Shift + Alt e botão para ampliar o preview."
+    "changelog":  "Interface PT/EN, opcao Nenhum no modelo e botao Atualizar malha removido."
 }
